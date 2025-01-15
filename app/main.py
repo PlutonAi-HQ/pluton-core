@@ -1,13 +1,24 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, Request, Response
 from pydantic import BaseModel, Field
 from app.controllers.agent import AgentController
 import uvicorn
 from fastapi.responses import StreamingResponse
-from fastapi import Request, Response
 from config import settings
+from app.middleware.limiter import RedisRateLimiterMiddleware
+from app.middleware.redis import get_redis_client
+
 
 app = FastAPI()
 print(settings.origins)
+print("REDIS_URI", settings.REDIS_URI)
+
+# Add the rate limiting middleware
+app.add_middleware(
+    RedisRateLimiterMiddleware,
+    redis_client=get_redis_client(),
+    window=settings.RATE_LIMIT_WINDOW,
+    limit=settings.RATE_LIMIT_MAX_REQUESTS,
+)
 
 
 @app.middleware("http")
@@ -36,7 +47,12 @@ class AgentCallRequest(BaseModel):
 
 @app.get(f"{PREFIX}/healthz")
 def healthz():
-    return {"message": "OK"}
+    try:
+        return {"message": "OK"}
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.options(f"{PREFIX}/agent/call")
@@ -60,9 +76,11 @@ def agent_call(request: AgentCallRequest):
             yield f"event: end\ndata: {aggregated_response}\n\n"
 
         return StreamingResponse(event_generator(), media_type="text/event-stream")
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=3456)
+    uvicorn.run("app.main:app", host="0.0.0.0", port=3456)

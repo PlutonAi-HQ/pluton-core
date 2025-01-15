@@ -80,3 +80,4 @@ urllib3==2.3.0
 userpath==1.9.2
 uvicorn==0.34.0
 google-generativeai
+redis

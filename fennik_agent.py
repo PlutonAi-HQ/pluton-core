@@ -7,8 +7,6 @@ import os
 from dotenv import load_dotenv
 from phi.storage.agent.postgres import PgAgentStorage
 import typer
-from tools.wallet import get_wallet_secret, generate_wallet
-from tools.trade import faucet
 from config import settings
 
 db_url = settings.POSTGRES_URL
@@ -35,31 +33,16 @@ def call_agent(
         add_datetime_to_instructions=True,
     )
 
-    wallet_agent = Agent(
-        provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
-        name="Wallet Agent",
-        role="Do everything related to the wallet. Cannot generate wallet and cannot get wallet secret at the same time.",
-        additional_context="The chat_id will be the session_id: {}".format(session_id),
-        tools=[get_wallet_secret, generate_wallet],
-    )
     image_analyzer = Agent(
         provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
         name="Image Analyzer",
         role="Analyzes the image",
     )
 
-    trader = Agent(
-        provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
-        name="Trader",
-        role="Trades on the market. Swaps tokens, buys and sells tokens. Faucets, airdrops tokens.",
-        additional_context=" The chat_id will be the session_id: {}".format(session_id),
-        tools=[faucet],
-    )
-
     fennik_team = Agent(
         provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
         name="Fennik Team",
-        team=[web_searcher, wallet_agent, image_analyzer, trader],
+        team=[web_searcher, image_analyzer],
         instructions=[
             "First, search the web for what the user is asking about.",
             "If the user asks about a wallet, ask the wallet agent to get information about the wallet. If the wallet is not generated, generate a new wallet.",

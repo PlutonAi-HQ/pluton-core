@@ -9,9 +9,9 @@ from phi.storage.agent.postgres import PgAgentStorage
 import typer
 from tools.wallet import get_wallet_secret, generate_wallet
 from tools.trade import faucet
+from config import settings
 
-load_dotenv()
-db_url = os.getenv("POSTGRES_URL")
+db_url = settings.POSTGRES_URL
 storage = PgAgentStorage(
     # store sessions in the ai.sessions table
     table_name="agent_sessions",
@@ -28,9 +28,7 @@ def call_agent(
     stream: bool = False,
 ):
     web_searcher = Agent(
-        provider=Gemini(
-            api_key=os.getenv("GEMINI_API_KEY"), id="gemini-1.5-flash-latest"
-        ),
+        provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
         name="Web Searcher",
         role="Searches the web for information on a topic",
         tools=[DuckDuckGo()],
@@ -38,26 +36,20 @@ def call_agent(
     )
 
     wallet_agent = Agent(
-        provider=Gemini(
-            api_key=os.getenv("GEMINI_API_KEY"), id="gemini-1.5-flash-latest"
-        ),
+        provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
         name="Wallet Agent",
         role="Do everything related to the wallet. Cannot generate wallet and cannot get wallet secret at the same time.",
         additional_context="The chat_id will be the session_id: {}".format(session_id),
         tools=[get_wallet_secret, generate_wallet],
     )
     image_analyzer = Agent(
-        provider=Gemini(
-            api_key=os.getenv("GEMINI_API_KEY"), id="gemini-1.5-flash-latest"
-        ),
+        provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
         name="Image Analyzer",
         role="Analyzes the image",
     )
 
     trader = Agent(
-        provider=Gemini(
-            api_key=os.getenv("GEMINI_API_KEY"), id="gemini-1.5-flash-latest"
-        ),
+        provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
         name="Trader",
         role="Trades on the market. Swaps tokens, buys and sells tokens. Faucets, airdrops tokens.",
         additional_context=" The chat_id will be the session_id: {}".format(session_id),
@@ -65,9 +57,7 @@ def call_agent(
     )
 
     fennik_team = Agent(
-        provider=Gemini(
-            api_key=os.getenv("GEMINI_API_KEY"), id="gemini-1.5-flash-latest"
-        ),
+        provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
         name="Fennik Team",
         team=[web_searcher, wallet_agent, image_analyzer, trader],
         instructions=[

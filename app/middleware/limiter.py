@@ -35,8 +35,8 @@ class RedisRateLimiterMiddleware(BaseHTTPMiddleware):
         """
         super().__init__(app)
         self.redis_client = redis_client
-        self.limit = limit
-        self.window = window
+        self.limit = int(limit)
+        self.window = int(window)
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """

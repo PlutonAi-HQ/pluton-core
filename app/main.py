@@ -28,6 +28,8 @@ async def cors_handler(request: Request, call_next):
     response.headers["Access-Control-Allow-Origin"] = settings.origins
     response.headers["Access-Control-Allow-Methods"] = "*"
     response.headers["Access-Control-Allow-Headers"] = "*"
+    if request.method == "OPTIONS":
+        return Response(status_code=200)
     return response
 
 
@@ -45,6 +47,11 @@ class AgentCallRequest(BaseModel):
     user_id: str = Field(None, description="The user id", example="u-1234567890")
 
 
+class AgentHistoryRequest(BaseModel):
+    session_id: str = Field(..., description="The session id", example="s-1234567890")
+    user_id: str = Field(None, description="The user id", example="u-1234567890")
+
+
 @app.get(f"{PREFIX}/healthz")
 def healthz():
     try:
@@ -55,9 +62,15 @@ def healthz():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.options(f"{PREFIX}/agent/call")
-def agent_call_options():
-    return {"message": "OK"}
+@app.post(f"{PREFIX}/agent/history")
+def agent_history(request: AgentHistoryRequest):
+    try:
+        agent_controller = AgentController()
+        return agent_controller.get_agent_history(request.session_id, request.user_id)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post(f"{PREFIX}/agent/call")
@@ -83,4 +96,4 @@ def agent_call(request: AgentCallRequest):
 
 
 if __name__ == "__main__":
-    uvicorn.run("app.main:app", host="0.0.0.0", port=3456)
+    uvicorn.run("app.main:app", host="0.0.0.0", port=3456, reload=True)

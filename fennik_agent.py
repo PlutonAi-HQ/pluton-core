@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from phi.storage.agent.postgres import PgAgentStorage
 import typer
 from config import settings
+from rich import print
 
 db_url = settings.POSTGRES_URL
 storage = PgAgentStorage(
@@ -16,6 +17,28 @@ storage = PgAgentStorage(
     # db_url: Postgres database URL
     db_url=db_url,
 )
+
+
+def get_history(session_id: str, user_id: str):
+    sessions = storage.get_all_sessions(user_id=user_id)
+    session = next((s for s in sessions if s.session_id == session_id), None)
+    print("sessions", session.memory.get("runs"))
+    history = []
+    for run in session.memory.get("runs"):
+        user_message = run.get("message").get("content")
+        agent_message = run.get("response").get("content")
+        result = [
+            {
+                "role": "user",
+                "content": user_message,
+            },
+            {
+                "role": "assistant",
+                "content": agent_message,
+            },
+        ]
+        history.extend(result)
+    return history
 
 
 def call_agent(

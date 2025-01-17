@@ -9,8 +9,6 @@ from app.middleware.redis import get_redis_client
 
 
 app = FastAPI()
-print(settings.origins)
-print("REDIS_URI", settings.REDIS_URI)
 
 # Add the rate limiting middleware
 app.add_middleware(
@@ -96,4 +94,4 @@ def agent_call(request: AgentCallRequest):
 
 
 if __name__ == "__main__":
-    uvicorn.run("app.main:app", host="0.0.0.0", port=3456, reload=True)
+    uvicorn.run("app.main:app", host="0.0.0.0", port=3456)

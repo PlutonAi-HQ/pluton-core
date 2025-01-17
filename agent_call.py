@@ -20,7 +20,6 @@ def call_agent(
         user_id=user_id,
         stream=stream,
     )
-    print(response)
     return response
 
 

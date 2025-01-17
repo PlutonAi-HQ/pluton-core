@@ -9,10 +9,6 @@ from phi.storage.agent.postgres import PgAgentStorage
 import typer
 from config import settings
 from rich import print
-from logging import getLogger, INFO, basicConfig
-
-basicConfig(level=INFO)
-logger = getLogger(__name__)
 
 db_url = settings.POSTGRES_URL
 storage = PgAgentStorage(
@@ -24,13 +20,10 @@ storage = PgAgentStorage(
 
 
 def get_history(session_id: str, user_id: str):
-    logger.info(f"Getting history for session {session_id} and user {user_id}")
     sessions = storage.get_all_sessions(user_id=user_id)
     session = next((s for s in sessions if s.session_id == session_id), None)
+    print("sessions", session.memory.get("runs"))
     history = []
-    if session is None:
-        logger.info(f"No session found for {session_id} and user {user_id}")
-        return history
     for run in session.memory.get("runs"):
         user_message = run.get("message").get("content")
         agent_message = run.get("response").get("content")
@@ -94,3 +87,48 @@ def call_agent(
     )
 
     return fennik_team.run(message=message, images=images, stream=stream)
+
+
+alpha = Agent(
+    provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
+    name="Alpha",
+    role="Alpha is a helpful assistant that can help you with your tasks.",
+    instructions="You are a helpful assistant that can help with tasks.",
+)
+beta = Agent(
+    provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-pro"),
+    name="Beta",
+    role="Beta is a helpful assistant that can help you with your tasks.",
+    instructions="You are a helpful assistant that can help with tasks.",
+)
+
+# alpha.print_response("Hello, how are you?")
+# beta.print_response("Hello, how are you?")
+
+first_message = "Chào bạn, tôi là Alpha, bạn có thể gửi cho tôi bất kỳ câu hỏi nào"
+from time import sleep
+from rich.console import Console
+from rich.panel import Panel
+from rich.markdown import Markdown
+
+console = Console()
+
+
+def format_message(message: str, role: str, color: str):
+    console.print(
+        Panel(
+            Markdown(message),
+            title=role,
+            title_align="left",
+            border_style=color,
+        )
+    )
+
+
+while True:
+    alpha_res = alpha.run(first_message)
+    format_message(alpha_res.content, "😇 Alpha", "blue")
+    beta_res = beta.run(alpha_res.content)
+    format_message(beta_res.content, "🤖 Beta", "green")
+    first_message = beta_res.content
+    sleep(10)

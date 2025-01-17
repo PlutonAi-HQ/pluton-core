@@ -38,5 +38,3 @@ jobs:
           tags: ${{secrets.REGISTRY_LOGIN_SERVER}}/${{inputs.image}}:${{inputs.tag}}
           push: true
           file: Dockerfile
-          cache-from: type=gha
-          cache-to: type=gha,mode=max

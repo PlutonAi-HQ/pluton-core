@@ -23,5 +23,5 @@ def call_agent(
     return response
 
 
-def get_history(session_id: str, user_id: str):
+def get_history(user_id: str, session_id: str = None):
     return history(session_id, user_id)

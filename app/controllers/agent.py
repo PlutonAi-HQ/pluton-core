@@ -10,5 +10,5 @@ class AgentController:
     ):
         return call_agent(message, session_id, images, user_id, stream=True)
 
-    def get_agent_history(self, session_id: str, user_id: str):
-        return get_history(session_id, user_id)
+    def get_agent_history(self, user_id: str, session_id: str = None):
+        return get_history(user_id, session_id)

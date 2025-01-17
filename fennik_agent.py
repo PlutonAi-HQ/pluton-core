@@ -23,29 +23,58 @@ storage = PgAgentStorage(
 )
 
 
-def get_history(session_id: str, user_id: str):
+def get_history(user_id: str, session_id: str = None):
     logger.info(f"Getting history for session {session_id} and user {user_id}")
     sessions = storage.get_all_sessions(user_id=user_id)
-    session = next((s for s in sessions if s.session_id == session_id), None)
     history = []
-    if session is None:
-        logger.info(f"No session found for {session_id} and user {user_id}")
+    logger.info(f"Sessions: {sessions}")
+
+    if session_id:
+        session = next((s for s in sessions if s.session_id == session_id), None)
+        if session is None:
+            logger.info(f"No session found for {session_id} and user {user_id}")
+            return history
+        for run in session.memory.get("runs"):
+            user_message = run.get("message").get("content")
+            agent_message = run.get("response").get("content")
+            result = [
+                {
+                    "role": "user",
+                    "content": user_message,
+                    "session_id": session.session_id,
+                },
+                {
+                    "role": "assistant",
+                    "content": agent_message,
+                    "session_id": session.session_id,
+                },
+            ]
+            history.extend(result)
         return history
-    for run in session.memory.get("runs"):
-        user_message = run.get("message").get("content")
-        agent_message = run.get("response").get("content")
-        result = [
-            {
-                "role": "user",
-                "content": user_message,
-            },
-            {
-                "role": "assistant",
-                "content": agent_message,
-            },
-        ]
-        history.extend(result)
-    return history
+    else:
+        all_sessions = []
+        for session in sessions:
+            history = []
+            session_id = session.session_id
+            for run in session.memory.get("runs"):
+                user_message = run.get("message").get("content")
+                agent_message = run.get("response").get("content")
+                history.extend(
+                    [
+                        {
+                            "role": "user",
+                            "content": user_message,
+                            "session_id": session_id,
+                        },
+                        {
+                            "role": "assistant",
+                            "content": agent_message,
+                            "session_id": session_id,
+                        },
+                    ]
+                )
+            all_sessions.append(history)
+        return all_sessions
 
 
 def call_agent(

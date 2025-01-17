@@ -6,7 +6,7 @@ from fastapi.responses import StreamingResponse
 from config import settings
 from app.middleware.limiter import RedisRateLimiterMiddleware
 from app.middleware.redis import get_redis_client
-
+from typing import Optional
 
 app = FastAPI()
 
@@ -46,7 +46,9 @@ class AgentCallRequest(BaseModel):
 
 
 class AgentHistoryRequest(BaseModel):
-    session_id: str = Field(..., description="The session id", example="s-1234567890")
+    session_id: Optional[str] = Field(
+        None, description="The session id", example="s-1234567890"
+    )
     user_id: str = Field(None, description="The user id", example="u-1234567890")
 
 

@@ -32,10 +32,9 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME}}
           password: ${{ secrets.REGISTRY_PASSWORD}}
       - name: Build Docker image
-        uses: azure/build-push-action@v4
+        uses: docker/build-push-action@v4
         with:
           context: .
-          image: ${{ inputs.image }}
-          tag: ${{secrets.REGISTRY_LOGIN_SERVER}}/${{inputs.image}}:${{inputs.tag}}
+          tags: ${{secrets.REGISTRY_LOGIN_SERVER}}/${{inputs.image}}:${{inputs.tag}}
           push: true
-          dockerfile: Dockerfile
+          file: Dockerfile

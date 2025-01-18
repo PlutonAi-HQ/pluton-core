@@ -59,6 +59,7 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add deployment/pluton-core.yaml
-          git rebase
+
           git commit -m "chore(pluton-core): Update pluton-core image tag to ${{ steps.vars.outputs.tag }}"
+          git rebase
           git push

@@ -42,7 +42,7 @@ jobs:
       - name: Checkout to pluton-infra
         uses: actions/checkout@v4
         with:
-          repository: pluton-infra
+          repository: PlutonAi-HQ/pluton-infra
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: main
 

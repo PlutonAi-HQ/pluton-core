@@ -23,10 +23,14 @@ app.add_middleware(
 async def cors_handler(request: Request, call_next):
     response: Response = await call_next(request)
     response.headers["Access-Control-Allow-Credentials"] = "true"
-    response.headers["Access-Control-Allow-Origin"] = "https://beta.plutonai.fun"
+    response.headers["Access-Control-Allow-Origin"] = settings.origins
     response.headers["Access-Control-Allow-Methods"] = "*"
     response.headers["Access-Control-Allow-Headers"] = "*"
     if request.method == "OPTIONS":
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Origin"] = settings.origins
+        response.headers["Access-Control-Allow-Methods"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "*"
         return Response(status_code=200)
     return response
 
@@ -62,11 +66,6 @@ def healthz():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.options(f"{PREFIX}/agent/history")
-def agent_history_options():
-    return Response(status_code=200)
-
-
 @app.post(f"{PREFIX}/agent/history")
 def agent_history(request: AgentHistoryRequest):
     try:
@@ -76,11 +75,6 @@ def agent_history(request: AgentHistoryRequest):
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.options(f"{PREFIX}/agent/call")
-def agent_call_options():
-    return Response(status_code=200)
 
 
 @app.post(f"{PREFIX}/agent/call")

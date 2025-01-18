@@ -1,0 +1,60 @@
+name: CICD
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+env:
+  IMAGE: ai-agent/pluton-dev
+jobs:
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          mask-password: true
+      - name: Set Image tag
+        id: vars
+        run: echo "tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{env.IMAGE}}:${{steps.vars.outputs.tag}}
+          push: true
+          file: Dockerfile
+
+      - name: Checkout to pluton-infra
+        uses: actions/checkout@v4
+        with:
+          repository: pluton-infra
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: main
+
+      - name: Edit deployment
+        run: |
+          sed -i "s|image: .*pluton-dev:.*|image: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE }}:${{ steps.vars.outputs.tag }}|" pluton-infra/deployment/pluton-core.yaml
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add pluton-infra/deployment/pluton-core.yaml
+          git rebase
+          git commit -m "chore(pluton-core): Update pluton-core image tag to ${{ steps.vars.outputs.tag }}"
+          git push

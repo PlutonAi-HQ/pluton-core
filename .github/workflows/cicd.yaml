@@ -49,7 +49,7 @@ jobs:
         with:
           repository: PlutonAi-HQ/pluton-infra
           ref: main
-
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Edit deployment
         run: |
           sed -i "s|image: .*pluton-dev:.*|image: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE }}:${{ steps.vars.outputs.tag }}|" pluton-infra/deployment/pluton-core.yaml

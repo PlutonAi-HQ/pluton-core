@@ -18,23 +18,26 @@ jobs:
     name: Build Docker Image
     runs-on: ubuntu-latest
     steps:
-      - name: Print tag
-        run: echo "Building image with tag ${{ inputs.tag }}"
-
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Login to Azure Container Registry
-        uses: azure/docker-login@v1
-
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-          username: ${{ secrets.REGISTRY_USERNAME}}
-          password: ${{ secrets.REGISTRY_PASSWORD}}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          mask-password: true
+
       - name: Build Docker image
         uses: docker/build-push-action@v4
         with:
           context: .
-          tags: ${{secrets.REGISTRY_LOGIN_SERVER}}/${{inputs.image}}:${{inputs.tag}}
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{inputs.image}}:${{inputs.tag}}
           push: true
           file: Dockerfile

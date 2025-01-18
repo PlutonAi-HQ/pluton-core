@@ -52,13 +52,13 @@ jobs:
           token: ${{ secrets.PAT_ACCESS_TOKEN }}
       - name: Edit deployment
         run: |
-          sed -i "s|image: .*pluton-dev:.*|image: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE }}:${{ steps.vars.outputs.tag }}|" pluton-infra/deployment/pluton-core.yaml
+          sed -i "s|image: .*pluton-dev:.*|image: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE }}:${{ steps.vars.outputs.tag }}|" deployment/pluton-core.yaml
 
       - name: Commit and push
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add pluton-infra/deployment/pluton-core.yaml
+          git add deployment/pluton-core.yaml
           git rebase
           git commit -m "chore(pluton-core): Update pluton-core image tag to ${{ steps.vars.outputs.tag }}"
           git push

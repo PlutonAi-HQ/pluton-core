@@ -43,7 +43,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: PlutonAi-HQ/pluton-infra
-          token: ${{ secrets.GITHUB_TOKEN }}
           ref: main
 
       - name: Edit deployment

@@ -31,7 +31,7 @@ async def cors_handler(request: Request, call_next):
         response.headers["Access-Control-Allow-Origin"] = settings.origins
         response.headers["Access-Control-Allow-Methods"] = "*"
         response.headers["Access-Control-Allow-Headers"] = "*"
-        return Response(status_code=200)
+        return Response(headers=response.headers)
     return response
 
 

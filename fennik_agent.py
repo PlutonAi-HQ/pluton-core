@@ -109,7 +109,7 @@ def call_agent(
         name="Coin Suggestor",  
         role="Recommends cryptocurrencies ", 
         add_datetime_to_instructions=True,
-        tools=[TopTrending()] 
+        tools=[TopTrending()],
         description="Useful for suggesting trending cryptocurrencies based on market analysis, user preferences, and investment opportunities."  
     )
 
@@ -136,7 +136,7 @@ def call_agent(
         add_chat_history_to_messages=True,
         user_id=user_id,
         debug_mode=True,
-        add_datetime_to_instructions = True
+        add_datetime_to_instructions = True,
         system_prompt = [
             "You are PlutonAI, an intelligent virtual assistant with the ability to search for information on the web, analyze images, and provide cryptocurrency suggestions.",
             "You have the capability to interact with users to understand their requests and provide accurate and helpful information.",

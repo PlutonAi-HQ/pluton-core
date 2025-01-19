@@ -81,10 +81,5 @@ userpath==1.9.2
 uvicorn==0.34.0
 google-generativeai
 redis
-langgraph
 trafilatura
-langchain-community
-langchain-core
-langchain-openai
 langchain-google-genai
-langchain-core

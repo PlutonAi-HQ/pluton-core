@@ -1,4 +1,4 @@
-from services.wallet import WalletService
+from app.services.wallet import WalletService
 
 
 class WalletController:

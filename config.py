@@ -10,8 +10,8 @@ class Settings:
     BASE_URL = os.getenv("BASE_URL")
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
     REDIS_URI = os.getenv("REDIS_URI")
-    RATE_LIMIT_WINDOW = os.getenv("RATE_LIMIT_WINDOW", 60)
-    RATE_LIMIT_MAX_REQUESTS = os.getenv("RATE_LIMIT_MAX_REQUESTS", 5)
+    RATE_LIMIT_WINDOW = int(os.getenv("RATE_LIMIT_WINDOW", 60))
+    RATE_LIMIT_MAX_REQUESTS = int(os.getenv("RATE_LIMIT_MAX_REQUESTS", 5))
 
     @property
     def origins(self):

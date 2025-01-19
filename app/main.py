@@ -7,17 +7,11 @@ from fastapi.responses import StreamingResponse
 from config import settings
 from app.middleware.limiter import RedisRateLimiterMiddleware
 from app.middleware.redis import get_redis_client
-from typing import Optional
+from app.routes.agent import router as agent_router
+from app.routes.wallet import router as wallet_router
+from fastapi.responses import JSONResponse
 
 app = FastAPI()
-
-# Add the rate limiting middleware
-app.add_middleware(
-    RedisRateLimiterMiddleware,
-    redis_client=get_redis_client(),
-    window=settings.RATE_LIMIT_WINDOW,
-    limit=settings.RATE_LIMIT_MAX_REQUESTS,
-)
 
 
 @app.middleware("http")
@@ -38,23 +32,8 @@ async def cors_handler(request: Request, call_next):
 
 PREFIX = "/api"
 
-
-class AgentCallRequest(BaseModel):
-    message: str = Field(
-        ...,
-        description="The message to send to the agent",
-        example="Hello, how are you?",
-    )
-    session_id: str = Field(..., description="The session id", example="s-1234567890")
-    images: list[str] = Field([], description="The images to send to the agent")
-    user_id: str = Field(None, description="The user id", example="u-1234567890")
-
-
-class AgentHistoryRequest(BaseModel):
-    session_id: Optional[str] = Field(
-        None, description="The session id", example="s-1234567890"
-    )
-    user_id: str = Field(None, description="The user id", example="u-1234567890")
+app.include_router(agent_router, prefix=PREFIX)
+app.include_router(wallet_router, prefix=PREFIX)
 
 
 @app.get(f"{PREFIX}/healthz")
@@ -67,42 +46,9 @@ def healthz():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post(f"{PREFIX}/agent/history")
-def agent_history(request: AgentHistoryRequest):
-    try:
-        agent_controller = AgentController()
-        return agent_controller.get_agent_history(request.session_id, request.user_id)
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post(f"{PREFIX}/agent/call")
-def agent_call(request: AgentCallRequest):
-    try:
-
-        def event_generator():
-            agent_controller = AgentController()
-            aggregated_response = ""
-            response = agent_controller.call_agent(
-                request.message, request.session_id, request.images, request.user_id
-            )
-            for chunk in response:
-                aggregated_response += chunk.content
-                yield f"event: token\ndata: {chunk.content}\n\n"
-            yield f"event: end\ndata: {aggregated_response}\n\n"
-
-        return StreamingResponse(event_generator(), media_type="text/event-stream")
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post(f"{PREFIX}/wallet/generate")
-def generate_wallet():
-    return WalletController.generate_wallet()
+@app.exception_handler(HTTPException)
+def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
 
 if __name__ == "__main__":

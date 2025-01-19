@@ -1,12 +1,7 @@
-from redis import Redis
+import redis
 from config import settings
-
-try:
-    redis_client = Redis.from_url(settings.REDIS_URI)
-except Exception as e:
-    print(f"Error connecting to Redis: {e}")
-    redis_client = None
 
 
 def get_redis_client():
+    redis_client = redis.Redis.from_url(settings.REDIS_URI)
     return redis_client

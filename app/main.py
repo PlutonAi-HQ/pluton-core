@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends, Request, Response
 from pydantic import BaseModel, Field
 from app.controllers.agent import AgentController
+from app.controllers.wallet import WalletController
 import uvicorn
 from fastapi.responses import StreamingResponse
 from config import settings
@@ -97,6 +98,11 @@ def agent_call(request: AgentCallRequest):
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post(f"{PREFIX}/wallet/generate")
+def generate_wallet():
+    return WalletController.generate_wallet()
 
 
 if __name__ == "__main__":

@@ -17,5 +17,7 @@ class Settings:
     def origins(self):
         return os.getenv("ALLOWED_ORIGINS", "*")
 
+    WALLET_API_URL = os.getenv("WALLET_API_URL")
+
 
 settings = Settings()

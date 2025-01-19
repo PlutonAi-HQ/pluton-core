@@ -55,6 +55,15 @@ class TokenTrending(Toolkit):
             return {"status": "error", "message": str(e)}
     
     def fetch_tokens_information(self):
+        """
+        Fetches information about tokens.
+
+        Args:
+            None
+
+        Returns:
+            list: A list of dictionaries containing information about tokens with market capitalization over 300k.
+        """
         tokens_address = []
         tokens = self.fetch_token_boosts()
         for token in tokens:

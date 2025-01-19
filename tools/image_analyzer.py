@@ -17,6 +17,16 @@ class ImageAnalyzer(Toolkit):
             super().__init__(name = "Image_Analyzer")
             self.register(self.image_analyzer)
     def image_analyzer(urls: list[str], query: str):
+        """
+        Analyze images to perform tasks based on provided URLs and query.
+
+        Args:
+            urls (list[str]): List of URLs to images for analysis.
+            query (str): Query string to guide the analysis.
+
+        Returns:
+            str: Result of the image analysis.
+        """
         try:
             import ast
             user_message_content = []

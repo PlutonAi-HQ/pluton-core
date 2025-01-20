@@ -12,6 +12,7 @@ class Settings:
     REDIS_URI = os.getenv("REDIS_URI")
     RATE_LIMIT_WINDOW = int(os.getenv("RATE_LIMIT_WINDOW", 60))
     RATE_LIMIT_MAX_REQUESTS = int(os.getenv("RATE_LIMIT_MAX_REQUESTS", 5))
+    FILE_PREFIX = os.getenv("FILE_PREFIX", "pluton_")
 
     @property
     def origins(self):

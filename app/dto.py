@@ -1,5 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel, Field
+from datetime import datetime
 
 
 class AgentCallRequest(BaseModel):
@@ -26,3 +27,48 @@ class AgentHistoryRequest(BaseModel):
         None, description="The session id", example="s-1234567890"
     )
     user_id: str = Field(None, description="The user id", example="u-1234567890")
+
+
+class FileResponse(BaseModel):
+    id: int
+    filename: str
+    original_filename: str
+    file_path: str
+    file_size: int
+    file_type: str
+    mime_type: str
+    extension: str
+    storage_provider: str
+    is_public: bool
+    user_id: Optional[int]
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    class Config:
+        orm_mode = True
+
+
+class UserRequestDTO(BaseModel):
+    username: str = Field(..., description="The username", example="john_doe")
+    email: str = Field(..., description="The email", example="john_doe@example.com")
+    password: str = Field(..., description="The password", example="password123")
+
+
+class UserResponseDTO(BaseModel):
+    id: int
+    username: str
+    email: str
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+
+class WalletRequestDTO(BaseModel):
+    user_id: int
+
+
+class WalletResponseDTO(BaseModel):
+    id: int
+    user_id: int
+    public_key: str
+    private_key: str
+    seed_phrase: str

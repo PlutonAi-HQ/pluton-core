@@ -9,9 +9,18 @@ from app.middleware.limiter import RedisRateLimiterMiddleware
 from app.middleware.redis import get_redis_client
 from app.routes.agent import router as agent_router
 from app.routes.wallet import router as wallet_router
+from app.routes.file import router as file_router
+from app.routes.user import router as user_router
+from app.routes.wallet import router as wallet_router
 from fastapi.responses import JSONResponse
+from app.core.error_handlers import app_exception_handler, integrity_error_handler
+from app.core.exceptions import AppException
+from sqlalchemy.exc import IntegrityError
 
 app = FastAPI()
+
+app.add_exception_handler(AppException, app_exception_handler)
+app.add_exception_handler(IntegrityError, integrity_error_handler)
 
 
 @app.middleware("http")
@@ -33,6 +42,9 @@ async def cors_handler(request: Request, call_next):
 PREFIX = "/api"
 
 app.include_router(agent_router, prefix=PREFIX)
+app.include_router(wallet_router, prefix=PREFIX)
+app.include_router(file_router, prefix=PREFIX)
+app.include_router(user_router, prefix=PREFIX)
 app.include_router(wallet_router, prefix=PREFIX)
 
 

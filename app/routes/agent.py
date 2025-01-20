@@ -9,6 +9,8 @@ from fastapi import File, UploadFile
 from storage.aws_s3 import S3Storage
 from typing import List
 import logging
+from uuid import uuid4
+from config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -54,13 +56,3 @@ def agent_call(request: Request, body: AgentCallRequest):
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/agent/upload")
-@rate_limit(
-    max_requests=settings.RATE_LIMIT_MAX_REQUESTS + 10,
-    window=settings.RATE_LIMIT_WINDOW,
-)
-def agent_upload(request: Request, file: UploadFile = File(None)):
-    s3_storage = S3Storage()
-    return s3_storage.upload_file(file.file, file.filename)

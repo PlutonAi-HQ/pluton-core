@@ -1,7 +1,10 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Depends
 from app.controllers.wallet import WalletController
 from app.middleware.decorator import rate_limit
 from config import settings
+from app.dto import WalletRequestDTO
+from app.database.client import get_db
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
@@ -13,3 +16,8 @@ router = APIRouter()
 )
 def generate_wallet(request: Request):
     return WalletController.generate_wallet()
+
+
+@router.post("/wallet/create")
+def create_wallet(wallet: WalletRequestDTO, db: Session = Depends(get_db)):
+    return WalletController(db).create_wallet(wallet)

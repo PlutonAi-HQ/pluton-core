@@ -28,7 +28,8 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from telegram_fennik_agent.models import Base
+from app.database.client import Base
+from app.models import *
 
 target_metadata = Base.metadata
 

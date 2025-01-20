@@ -1,5 +1,4 @@
-import sys
-sys.path.append(".")
+
 from phi.agent import Agent
 from phi.tools.hackernews import HackerNews
 from phi.tools.duckduckgo import DuckDuckGo
@@ -15,6 +14,7 @@ from config import settings
 from rich import print
 from logging import getLogger, INFO, basicConfig
 from constants import image_analysis_system_prompt
+
 basicConfig(level=INFO)
 logger = getLogger(__name__)
 

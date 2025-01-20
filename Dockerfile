@@ -11,4 +11,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-CMD ["python", "app/main.py"]
+CMD ["/bin/bash", "entrypoint.sh"]

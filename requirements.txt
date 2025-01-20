@@ -83,3 +83,4 @@ google-generativeai
 redis
 trafilatura
 langchain-google-genai
+python-multipart

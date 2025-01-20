@@ -31,7 +31,7 @@ def rename_keys(data):
 class TokenTrending(Toolkit):
     def __init__(self):
         super().__init__(name = "token_suggestion")
-        self.register(self.fetch_tokens_information)
+        self.register(self.get_tokens_information)
 
     def _fetcher(self, url: str):
         try:
@@ -54,9 +54,9 @@ class TokenTrending(Toolkit):
         except Exception as e:
             return {"status": "error", "message": str(e)}
     
-    def fetch_tokens_information(self):
+    def get_tokens_information(self):
         """
-        Fetches information about tokens.
+        This agent is useful for suggesting trending cryptocurrencies.
 
         Args:
             None

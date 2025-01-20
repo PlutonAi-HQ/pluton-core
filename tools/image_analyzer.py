@@ -17,7 +17,7 @@ class ImageAnalyzer(Toolkit):
             self.register(self.image_analyzer)
     def image_analyzer(urls: list[str], query: str):
         """
-        Analyze images to perform tasks based on provided URLs and query.
+        This agent is useful for analyzing images to extract features, identify objects, and provide a detailed description of the image. It is also useful for providing investment strategies related to the identified elements.
 
         Args:
             urls (list[str]): List of URLs to images for analysis.

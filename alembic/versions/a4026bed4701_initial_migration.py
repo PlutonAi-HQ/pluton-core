@@ -91,16 +91,6 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_wallets_id"), "wallets", ["id"], unique=False)
-    op.drop_index(
-        "idx_agent_sessions_agent_id", table_name="agent_sessions", if_exists=True
-    )
-    op.drop_index(
-        "idx_agent_sessions_session_id", table_name="agent_sessions", if_exists=True
-    )
-    op.drop_index(
-        "idx_agent_sessions_user_id", table_name="agent_sessions", if_exists=True
-    )
-    op.drop_table("agent_sessions", if_exists=True)
     # ### end Alembic commands ###
 
 

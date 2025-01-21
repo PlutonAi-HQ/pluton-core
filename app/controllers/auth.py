@@ -70,17 +70,22 @@ class AuthController:
         user_service = UserService(self.db)
         user = user_service.get_user_by_email(body.email)
         if user:
-            raise HTTPException(status_code=401, detail="User already exists")
+            print("User already exists")
+            pass
         # TODO: If not, create user
         body.avatar = (
             body.avatar
             or f"https://avatar.iran.liara.run/username?username={body.username}"
         )
-        user = user_service.create_user(body)
-        # TODO: Create wallet
-        wallet_service = WalletService(self.db)
-        wallet = wallet_service.create_wallet(user.id)
-
+        if not user:
+            user = user_service.create_user(body)
+            # TODO: Create wallet
+            wallet_service = WalletService(self.db)
+            wallet = wallet_service.create_wallet(user.id)
+        # If exists, get wallet info
+        else:
+            wallet_service = WalletService(self.db)
+            wallet = wallet_service.get_wallet_by_user_id(user.id)
         # TODO: Generate JWT token
         token = jwt.encode(
             {"sub": str(user.id), "exp": datetime.now() + timedelta(hours=1)},

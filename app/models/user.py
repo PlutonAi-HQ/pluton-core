@@ -11,6 +11,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     username = Column(String, index=True)
     password = Column(String, nullable=True)
+    tier = Column(String, default="free", nullable=True)
     avatar = Column(
         String, default="https://avatar.iran.liara.run/public", nullable=True
     )

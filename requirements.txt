@@ -84,3 +84,4 @@ redis
 trafilatura
 langchain-google-genai
 python-multipart
+pyjwt

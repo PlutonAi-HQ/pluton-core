@@ -11,6 +11,11 @@ from typing import List
 import logging
 from uuid import uuid4
 from config import settings
+from app.middleware.auth import verify_token
+from app.models import User
+from fastapi import Depends
+from sqlalchemy.orm import Session
+from app.database import get_db
 
 logger = logging.getLogger(__name__)
 
@@ -21,10 +26,11 @@ router = APIRouter()
 def agent_history(
     request: Request,
     body: AgentHistoryRequest,
+    user: User = Depends(verify_token),
 ):
     try:
         agent_controller = AgentController()
-        return agent_controller.get_agent_history(body.session_id, body.user_id)
+        return agent_controller.get_agent_history(body.session_id, str(user.id))
     except HTTPException as e:
         raise e
     except Exception as e:
@@ -37,14 +43,18 @@ def agent_history(
 @rate_limit(
     max_requests=settings.RATE_LIMIT_MAX_REQUESTS, window=settings.RATE_LIMIT_WINDOW
 )
-def agent_call(request: Request, body: AgentCallRequest):
+def agent_call(
+    request: Request,
+    body: AgentCallRequest,
+    user: User = Depends(verify_token),
+):
     try:
 
         def event_generator():
             agent_controller = AgentController()
             aggregated_response = ""
             response = agent_controller.call_agent(
-                body.message, body.session_id, body.images, body.user_id
+                body.message, body.session_id, body.images, str(user.id)
             )
             for chunk in response:
                 aggregated_response += chunk.content

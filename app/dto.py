@@ -3,6 +3,22 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 
 
+class LoginRequest(BaseModel):
+    email: str = Field(..., description="The email", example="john_doe@example.com")
+    password: str = Field(..., description="The password", example="password123")
+
+
+class SignupRequest(BaseModel):
+    username: str = Field(..., description="The username", example="john_doe")
+    email: str = Field(..., description="The email", example="john_doe@example.com")
+    password: Optional[str] = Field(
+        None, description="The password", example="password123"
+    )
+    avatar: Optional[str] = Field(
+        None, description="The avatar", example="https://avatar.iran.liara.run/public"
+    )
+
+
 class AgentCallRequest(BaseModel):
     message: str = Field(
         ...,
@@ -19,18 +35,16 @@ class AgentCallRequest(BaseModel):
             ]
         ],
     )
-    user_id: str = Field(None, description="The user id", example="u-1234567890")
 
 
 class AgentHistoryRequest(BaseModel):
     session_id: Optional[str] = Field(
         None, description="The session id", example="s-1234567890"
     )
-    user_id: str = Field(None, description="The user id", example="u-1234567890")
 
 
 class FileResponse(BaseModel):
-    id: int
+    id: str
     filename: str
     original_filename: str
     file_path: str
@@ -40,7 +54,7 @@ class FileResponse(BaseModel):
     extension: str
     storage_provider: str
     is_public: bool
-    user_id: Optional[int]
+    user_id: Optional[str]
     created_at: datetime
     updated_at: Optional[datetime]
 
@@ -63,7 +77,7 @@ class UserResponseDTO(BaseModel):
 
 
 class WalletRequestDTO(BaseModel):
-    user_id: int
+    user_id: str
 
 
 class WalletResponseDTO(BaseModel):
@@ -72,3 +86,11 @@ class WalletResponseDTO(BaseModel):
     public_key: str
     private_key: str
     seed_phrase: str
+
+
+class SocialCallbackRequest(BaseModel):
+    username: str = Field(..., description="The username", example="john_doe")
+    email: str = Field(..., description="The email", example="john_doe@example.com")
+    avatar: Optional[str] = Field(
+        None, description="The avatar", example="https://avatar.iran.liara.run/public"
+    )

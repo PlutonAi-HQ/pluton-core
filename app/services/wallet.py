@@ -18,10 +18,18 @@ class WalletService:
         response = requests.post(
             f"{self.base_url}/api/wallet/generate", headers=self.headers
         )
-        return response.json()
+        data = response.json()
+        data = data["data"]
+        data = {
+            "seed_phrase": data["seedPhrase"],
+            "private_key": data["privateKeyBase58"],
+            "public_key": data["publicKey"],
+        }
+        return data
 
-    def create_wallet(self, wallet: WalletRequestDTO) -> Wallet:
-        wallet_model = Wallet(**wallet.model_dump())
+    def create_wallet(self, user_id: str) -> Wallet:
+        created_wallet = self.generate_wallet()
+        wallet_model = Wallet(**created_wallet, user_id=user_id)
         self.db.add(wallet_model)
         self.db.commit()
         return wallet_model

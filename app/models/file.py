@@ -3,12 +3,13 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database.client import Base
+import uuid
 
 
 class File(Base):
     __tablename__ = "files"
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id = Column(String, primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
     filename = Column(String(255), nullable=False)
     original_filename = Column(String(255), nullable=False)
     file_path = Column(String(500), nullable=False)
@@ -30,8 +31,8 @@ class File(Base):
     is_active = Column(Boolean, default=True)
 
     # User relationship (if needed)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    user = relationship("User", back_populates="files")
+    user_id = Column(String, ForeignKey("users.id"), nullable=True)
+    user = relationship("User", back_populates="files", lazy="select")
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())

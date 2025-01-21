@@ -5,6 +5,8 @@ from config import settings
 from app.controllers.file import FileController
 from app.database.client import get_db
 from app.dto import FileResponse
+from app.models.user import User
+from app.middleware.auth import verify_token
 
 router = APIRouter()
 
@@ -15,7 +17,10 @@ router = APIRouter()
     window=settings.RATE_LIMIT_WINDOW,
 )
 def agent_upload(
-    request: Request, file: UploadFile = File(None), db: Session = Depends(get_db)
+    request: Request,
+    file: UploadFile = File(None),
+    db: Session = Depends(get_db),
+    user: User = Depends(verify_token),
 ) -> FileResponse:
     file_controller = FileController(db)
-    return file_controller.upload_file(file, None)
+    return file_controller.upload_file(file, user.id)

@@ -19,6 +19,8 @@ class Settings:
         return os.getenv("ALLOWED_ORIGINS", "*")
 
     WALLET_API_URL = os.getenv("WALLET_API_URL")
+    JWT_SECRET = os.getenv("JWT_SECRET")
+    JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 
 
 settings = Settings()

@@ -16,6 +16,7 @@ from fastapi.responses import JSONResponse
 from app.core.error_handlers import app_exception_handler, integrity_error_handler
 from app.core.exceptions import AppException
 from sqlalchemy.exc import IntegrityError
+from app.routes.auth import router as auth_router
 
 app = FastAPI()
 
@@ -46,6 +47,7 @@ app.include_router(wallet_router, prefix=PREFIX)
 app.include_router(file_router, prefix=PREFIX)
 app.include_router(user_router, prefix=PREFIX)
 app.include_router(wallet_router, prefix=PREFIX)
+app.include_router(auth_router, prefix=PREFIX)
 
 
 @app.get(f"{PREFIX}/healthz")

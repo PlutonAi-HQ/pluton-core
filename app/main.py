@@ -26,17 +26,24 @@ app.add_exception_handler(IntegrityError, integrity_error_handler)
 
 @app.middleware("http")
 async def cors_handler(request: Request, call_next):
-    response: Response = await call_next(request)
-    response.headers["Access-Control-Allow-Credentials"] = "true"
-    response.headers["Access-Control-Allow-Origin"] = settings.origins
-    response.headers["Access-Control-Allow-Methods"] = "*"
-    response.headers["Access-Control-Allow-Headers"] = "*"
     if request.method == "OPTIONS":
+        response = JSONResponse(
+            content={},
+            status_code=204,
+            headers={
+                "Access-Control-Allow-Credentials": "true",
+                "Access-Control-Allow-Origin": settings.origins,
+                "Access-Control-Allow-Methods": "*",
+                "Access-Control-Allow-Headers": "*",
+            },
+        )
+    else:
+        response = await call_next(request)
         response.headers["Access-Control-Allow-Credentials"] = "true"
         response.headers["Access-Control-Allow-Origin"] = settings.origins
         response.headers["Access-Control-Allow-Methods"] = "*"
         response.headers["Access-Control-Allow-Headers"] = "*"
-        return JSONResponse(headers=response.headers, content={}, status_code=204)
+
     return response
 
 

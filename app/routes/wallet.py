@@ -14,8 +14,8 @@ router = APIRouter()
     max_requests=settings.RATE_LIMIT_MAX_REQUESTS + 100,
     window=settings.RATE_LIMIT_WINDOW,
 )
-def generate_wallet(request: Request):
-    return WalletController.generate_wallet()
+def generate_wallet(request: Request, db: Session = Depends(get_db)):
+    return WalletController(db).generate_wallet()
 
 
 @router.post("/wallet/create")

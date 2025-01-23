@@ -1,4 +1,3 @@
-
 from phi.agent import Agent
 from phi.tools.hackernews import HackerNews
 from phi.tools.duckduckgo import DuckDuckGo
@@ -14,9 +13,11 @@ from config import settings
 from rich import print
 from logging import getLogger, INFO, basicConfig
 from constants import image_analysis_system_prompt
+from log import logger
+from rich.console import Console
+from rich.json import JSON
 
-basicConfig(level=INFO)
-logger = getLogger(__name__)
+console = Console()
 
 db_url = settings.POSTGRES_URL
 storage = PgAgentStorage(
@@ -31,8 +32,7 @@ def get_history(user_id: str, session_id: str = None):
     logger.info(f"Getting history for session {session_id} and user {user_id}")
     sessions = storage.get_all_sessions(user_id=user_id)
     history = []
-    logger.info(f"Sessions: {sessions}")
-
+    print(sessions)
     if session_id:
         session = next((s for s in sessions if s.session_id == session_id), None)
         if session is None:
@@ -40,11 +40,17 @@ def get_history(user_id: str, session_id: str = None):
             return history
         for run in session.memory.get("runs"):
             user_message = run.get("message").get("content")
+            images_message = [
+                message.get("images")
+                for message in run.get("response").get("messages")
+                if message.get("role") == "user"
+            ][0]
             agent_message = run.get("response").get("content")
             result = [
                 {
                     "role": "user",
                     "content": user_message,
+                    "images": images_message,
                     "session_id": session.session_id,
                 },
                 {
@@ -89,11 +95,9 @@ def call_agent(
     stream: bool = False,
 ):
     fennik_team = Agent(
-        provider=Gemini(
-            api_key=settings.GEMINI_API_KEY, 
-            id="gemini-1.5-flash-latest"),
+        provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
         name="Fennik Team",
-        description= """You are PlutonAI, an intelligent virtual assistant with the ability to search for information on the web, analyze images, and provide cryptocurrency suggestions.
+        description="""You are PlutonAI, an intelligent virtual assistant with the ability to search for information on the web, analyze images, and provide cryptocurrency suggestions.
 
 You have the capability to interact with users to understand their requests and provide accurate and helpful information.
 
@@ -129,10 +133,10 @@ Finally, provide engaging and friendly responses, which may include emojis.""",
         add_chat_history_to_messages=True,
         user_id=user_id,
         debug_mode=True,
-        prevent_hallucinations = True,
-        add_datetime_to_instructions = True,
-        read_tool_call_history = True
-        )
+        prevent_hallucinations=True,
+        add_datetime_to_instructions=True,
+        read_tool_call_history=True,
+    )
 
     # image_analyzer = Agent(
     #     provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
@@ -142,17 +146,15 @@ Finally, provide engaging and friendly responses, which may include emojis.""",
     #     tools=[ImageAnalyzer()],
     #     description="This agent is useful for analyzing images to extract features, identify objects, and provide a detailed description of the image. It is also useful for providing investment strategies related to the identified elements."  # Updated description according to the new structure
     # )
-    
-    
+
     # coin_suggestor = Agent(
     #     provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
-    #     name="Coin Suggestor",  
-    #     role="Coin recommender", 
+    #     name="Coin Suggestor",
+    #     role="Coin recommender",
     #     add_datetime_to_instructions=True,
     #     tools=[TokenTrending()],
-    #     description="This agent is useful for suggesting trending cryptocurrencies."  
+    #     description="This agent is useful for suggesting trending cryptocurrencies."
     # )
-
 
     # fennik_team = Agent(
     #     provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest", system_prompt = "You are PlutonAI."),
@@ -181,14 +183,14 @@ Finally, provide engaging and friendly responses, which may include emojis.""",
 
     return fennik_team.run(message=message, images=images, stream=stream)
 
+
 if __name__ == "__main__":
     # Chạy hàm call_agent với các tham số mẫu
     user_id = "phuctinh"
     session_id = "2"
     while True:
         message = input("Nhập message:     ")
-        if message in ['q', 'exit']:
+        if message in ["q", "exit"]:
             break
-        response = call_agent(message=message, session_id=session_id, user_id = user_id)
+        response = call_agent(message=message, session_id=session_id, user_id=user_id)
         print(response)  # In ra phản hồi từ hàm call_agent
-    

@@ -7,8 +7,9 @@ import os
 from dotenv import load_dotenv
 from phi.storage.agent.postgres import PgAgentStorage
 import typer
-from tools.image_analyzer import ImageAnalyzer
+from tools.image_analyzer import analyze_image
 from tools.token import TokenTrending
+from tools.shell import ShellTools
 from config import settings
 from rich import print
 from logging import getLogger, INFO, basicConfig
@@ -118,12 +119,12 @@ Finally, provide engaging and friendly responses, which may include emojis.""",
             "Double check answers to ensure complete and accurate information",
             "If the user asks about a wallet, ask the wallet agent to get information about the wallet. If the wallet is not generated, generate a new wallet.",
             "Before calling wallet agent, you must warn the user about the risk of revealing their wallet information and ask for their consent to proceed.",
-            "If the user provides an image, analyze the image and provide a summary of the image.",
+            "If the user provides an image, analyze the image and provide a summary of the image. use tool ImageAnalyzer",
             "If the user asks about a trade, call the trader agent to trade on the market.",
             "Finally, provide a thoughtful and engaging summary. Not include any tool calls",
             "Response could include emojis.",
         ],
-        tools=[DuckDuckGo(), ImageAnalyzer(), TokenTrending()],
+        tools=[DuckDuckGo(), analyze_image, TokenTrending()],
         show_tool_calls=True,
         markdown=True,
         storage=storage,
@@ -136,6 +137,9 @@ Finally, provide engaging and friendly responses, which may include emojis.""",
         prevent_hallucinations=True,
         add_datetime_to_instructions=True,
         read_tool_call_history=True,
+        context={
+            "user_id": user_id,
+        },
     )
 
     # image_analyzer = Agent(
@@ -181,7 +185,7 @@ Finally, provide engaging and friendly responses, which may include emojis.""",
     #     add_datetime_to_instructions = True
     #      )
 
-    return fennik_team.run(message=message, images=images, stream=stream)
+    return fennik_team.run(message=message + " " + "\n".join(images), stream=stream)
 
 
 if __name__ == "__main__":

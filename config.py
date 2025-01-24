@@ -14,6 +14,8 @@ class Settings:
     RATE_LIMIT_MAX_REQUESTS = int(os.getenv("RATE_LIMIT_MAX_REQUESTS", 5))
     FILE_PREFIX = os.getenv("FILE_PREFIX", "pluton_")
 
+    SERVICE_JUPITER_BASE_URL = os.getenv("SERVICE_JUPITER_BASE_URL")
+
     @property
     def origins(self):
         return os.getenv("ALLOWED_ORIGINS", "*")

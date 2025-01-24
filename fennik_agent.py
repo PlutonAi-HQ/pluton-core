@@ -9,7 +9,6 @@ from phi.storage.agent.postgres import PgAgentStorage
 import typer
 from tools.image_analyzer import analyze_image
 from tools.token import TokenTrending
-from tools.shell import ShellTools
 from config import settings
 from rich import print
 from logging import getLogger, INFO, basicConfig
@@ -17,6 +16,7 @@ from constants import image_analysis_system_prompt
 from log import logger
 from rich.console import Console
 from rich.json import JSON
+from tools.jupiter import swap_token, limit_order, cancel_all_orders
 
 console = Console()
 
@@ -95,7 +95,7 @@ def call_agent(
     user_id: str = None,
     stream: bool = False,
 ):
-    fennik_team = Agent(
+    agent = Agent(
         provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
         name="Fennik Team",
         description="""You are PlutonAI, an intelligent virtual assistant with the ability to search for information on the web, analyze images, and provide cryptocurrency suggestions.
@@ -123,8 +123,16 @@ Finally, provide engaging and friendly responses, which may include emojis.""",
             "If the user asks about a trade, call the trader agent to trade on the market.",
             "Finally, provide a thoughtful and engaging summary. Not include any tool calls",
             "Response could include emojis.",
+            "Before execute any tool, notify the user your action",
         ],
-        tools=[DuckDuckGo(), analyze_image, TokenTrending()],
+        tools=[
+            DuckDuckGo(),
+            analyze_image,
+            TokenTrending(),
+            swap_token,
+            limit_order,
+            cancel_all_orders,
+        ],
         show_tool_calls=True,
         markdown=True,
         storage=storage,
@@ -137,8 +145,10 @@ Finally, provide engaging and friendly responses, which may include emojis.""",
         prevent_hallucinations=True,
         add_datetime_to_instructions=True,
         read_tool_call_history=True,
+        add_context=True,
         context={
             "user_id": user_id,
+            "task": "Analyze the image and provide strategies" if images else None,
         },
     )
 
@@ -185,16 +195,25 @@ Finally, provide engaging and friendly responses, which may include emojis.""",
     #     add_datetime_to_instructions = True
     #      )
 
-    return fennik_team.run(message=message + " " + "\n".join(images), stream=stream)
+    return agent.run(message=message + " " + "\n".join(images), stream=stream)
 
 
 if __name__ == "__main__":
-    # Chạy hàm call_agent với các tham số mẫu
-    user_id = "phuctinh"
-    session_id = "2"
-    while True:
-        message = input("Nhập message:     ")
-        if message in ["q", "exit"]:
-            break
-        response = call_agent(message=message, session_id=session_id, user_id=user_id)
-        print(response)  # In ra phản hồi từ hàm call_agent
+    # # Chạy hàm call_agent với các tham số mẫu
+    # user_id = "phuctinh"
+    # session_id = "2"
+    # while True:
+    #     message = input("Nhập message:     ")
+    #     if message in ["q", "exit"]:
+    #         break
+    #     response = call_agent(message=message, session_id=session_id, user_id=user_id)
+    #     print(response)  # In ra phản hồi từ hàm call_agent
+    # swap_token(
+    #     1,
+    #     "So11111111111111111111111111111111111111112",
+    #     "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    #     "f3f1c389-9b99-407b-b43b-f58cc6089e91",
+    # )
+    cancel_all_orders(
+        user_id="f3f1c389-9b99-407b-b43b-f58cc6089e91",
+    )

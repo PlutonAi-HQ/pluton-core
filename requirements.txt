@@ -88,3 +88,4 @@ pyjwt
 psycopg-pool
 requests
 psycopg
+psycopg_binary

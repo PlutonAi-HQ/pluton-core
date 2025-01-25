@@ -155,12 +155,12 @@ def call_agent(
 if __name__ == "__main__":
     # Chạy hàm call_agent với các tham số mẫu
     user_id = "phuctinh"
-    session_id = "fafsfkksaffdff"
+    session_id = "fafsgggsggsfkksaffdff"
     while True:
         message = input("Nhập message:     ")
         if message in ["q", "exit"]:
             break
         response = call_agent(message=message, session_id=session_id, user_id=user_id)
-        # print("=============================")
-        # print(response)  # In ra phản hồi từ hàm call_agent
+        print("=============================")
+        print(response)  # In ra phản hồi từ hàm call_agent
     

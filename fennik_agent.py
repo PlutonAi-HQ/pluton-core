@@ -1,5 +1,3 @@
-import sys
-sys.path.append(".")
 from phi.agent import Agent
 from phi.tools.hackernews import HackerNews
 from phi.tools.duckduckgo import DuckDuckGo
@@ -20,9 +18,10 @@ from log import logger
 from rich.console import Console
 from rich.json import JSON
 from tools.jupiter import swap_token, limit_order, cancel_all_orders
-
+from phi.model.azure import AzureOpenAIChat
 console = Console()
-
+from phi.model.openai import OpenAIChat
+from phi.model.aws.claude import Claude
 db_url = settings.POSTGRES_URL
 storage = PgAgentStorage(
     # store sessions in the ai.sessions table
@@ -36,7 +35,6 @@ def get_history(user_id: str, session_id: str = None):
     logger.info(f"Getting history for session {session_id} and user {user_id}")
     sessions = storage.get_all_sessions(user_id=user_id)
     history = []
-    print(sessions)
     if session_id:
         session = next((s for s in sessions if s.session_id == session_id), None)
         if session is None:
@@ -104,189 +102,38 @@ def call_agent(
             get_tokens_information,
             swap_token,
             limit_order,
-            cancel_all_orders,
-        ]
-    # print("toools:    \n", tools)
-    # search_agent = Agent(provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
-    #     name="Web Search Agent",
-    #     role = "You are PlutonAI, Search the web for accurate and up-to-date information",
-    #     instruction =[
-    #     "Always include sources and citations",
-    #     "Verify information from multiple sources when possible",
-    #     "Present information in a clear, structured format",
-    # ],
-    # tools = [search],
-    # show_tool_calls=True,
-    # markdown=True,
-    # storage=storage,
-    # tool_choice = 'auto',
-    # read_chat_history=True,
-    # session_id=session_id,
-    # num_history_responses=5,
-    # add_chat_history_to_messages=True,
-    # user_id=user_id,
-    # debug_mode=True,
-    # add_datetime_to_instructions=True,
-    # read_tool_call_history=True,
-    # monitoring=True)
-    
-    # analyze_image_agent = Agent(provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
-    #     name="Image Analysis Agent",
-    #     role = "You are PlutonAI, an expert in analyzing images and charts related to cryptocurrency and blockchain.",
-    #     instruction = [
-    #     "Thoroughly examine images and charts to identify key elements and features.",
-    #     "Provide detailed descriptions of the content of images, including relevant context or implications.",
-    #     "Identify and describe key technical indicators, price patterns, market trends, and network metrics for charts.",
-    #     "Interpret the data using appropriate analytical techniques and frameworks.",
-    #     "Offer well-reasoned insights, predictions, and trading/investment recommendations based on the analysis.",
-    #     "Ensure the analysis is data-driven, objective, and tailored to the user's needs.",
-    #     "Maintain a friendly, helpful, and professional tone throughout interactions."
-    # ],
-    # tools = [analyze_image],
-    # tool_choice = 'auto',
-    # show_tool_calls=True,
-    # markdown=True,
-    # storage=storage,
-    # read_chat_history=True,
-    # session_id=session_id,
-    # num_history_responses=5,
-    # add_chat_history_to_messages=True,
-    # user_id=user_id,
-    # debug_mode=True,
-    # add_datetime_to_instructions=True,
-    # read_tool_call_history=True,
-    # monitoring=True)
-    
-
-    # # Tạo agent cho tool `get_tokens_information`
-    # tokens_agent = Agent(
-    #     provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
-    #     name="Tokens Trend Agent",
-    #     role="You are PlutonAI, an expert in providing recommendations for trending tokens.",
-    #     instruction=[
-    #         "Provide information and recommendations about trending tokens.",
-    #         "Include market data, recent performance, and news related to these tokens.",
-    #         "Suggest tokens that are currently popular and have potential for growth.",
-    #     ],
-    #     tools=[get_tokens_information],
-    #     show_tool_calls=True,
-    #     markdown=True,
-    #     tool_choice = 'auto',
-    #     storage=storage,
-    #     read_chat_history=True,
-    #     session_id=session_id,
-    #     num_history_responses=5,
-    #     add_chat_history_to_messages=True,
-    #     user_id=user_id,
-    #     debug_mode=True,
-    #     add_datetime_to_instructions=True,
-    #     read_tool_call_history=True,
-    #     monitoring=True
-    # )
-
-    # # Tạo agent cho tool `swap_token`
-    # swap_agent = Agent(
-    #     provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
-    #     name="Token Swap Agent",
-    #     role="You are PlutonAI, an expert in swapping tokens.",
-    #     instruction=[
-    #         "Assist users in swapping tokens efficiently.",
-    #         "Provide information about swap rates and fees.",
-    #         "Ensure the process is secure and user-friendly.",
-    #     ],
-    #     tools=[swap_token],
-    #     show_tool_calls=True,
-    #     markdown=True,   
-    #     tool_choice = 'auto',
-    #     storage=storage,
-    #     read_chat_history=True,
-    #     session_id=session_id,
-    #     num_history_responses=5,
-    #     add_chat_history_to_messages=True,
-    #     user_id=user_id,
-    #     debug_mode=True,
-    #     add_datetime_to_instructions=True,
-    #     read_tool_call_history=True,
-    #     monitoring=True
-    # )
-
-    # # Tạo agent cho tool `limit_order`
-    # limit_order_agent = Agent(
-    #     provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
-    #     name="Limit Order Agent",
-    #     role="You are PlutonAI, an expert in placing limit orders.",
-    #     instruction=[
-    #         "Help users place limit orders on the market.",
-    #         "Provide guidance on setting order parameters.",
-    #         "Ensure users understand the risks involved.",
-    #     ],
-    #     tools=[limit_order],
-    #     show_tool_calls=True,
-    #     markdown=True,
-    #     tool_choice = 'auto',
-    #     storage=storage,
-    #     read_chat_history=True,
-    #     session_id=session_id,
-    #     num_history_responses=5,
-    #     add_chat_history_to_messages=True,
-    #     user_id=user_id,
-    #     debug_mode=True,
-    #     add_datetime_to_instructions=True,
-    #     read_tool_call_history=True,
-    #     monitoring=True
-    # )
-
-    # # Tạo agent cho tool `cancel_all_orders`
-    # cancel_orders_agent = Agent(
-    #     provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
-    #     name="Cancel All Orders Agent",
-    #     role="You are PlutonAI, an expert in canceling orders.",
-    #     instruction=[
-    #         "Assist users in canceling all their active orders.",
-    #         "Provide confirmation and details of canceled orders.",
-    #         "Ensure the process is clear and straightforward.",
-    #     ],
-    #     tools=[cancel_all_orders],
-    #     show_tool_calls=True,
-    #     tool_choice = 'auto',
-    #     markdown=True,
-    #     storage=storage,
-    #     read_chat_history=True,
-    #     session_id=session_id,
-    #     num_history_responses=5,
-    #     add_chat_history_to_messages=True,
-    #     user_id=user_id,
-    #     debug_mode=True,
-    #     add_datetime_to_instructions=True,
-    #     read_tool_call_history=True,
-    #     monitoring=True
-    # )
-    
-    # print("TEAM:     \n", [search_agent, analyze_image_agent, tokens_agent, swap_agent, limit_order_agent, cancel_orders_agent])
+            cancel_all_orders]
+#     azure_model = AzureOpenAIChat(
+#     id="gpt-4o-mini",
+#     api_key="60faaa4f139c4047b60657b4d2393efc",
+#     azure_endpoint="https://aitoolvbi.openai.azure.com/",
+#     azure_deployment="gpt-4o-mini",
+# )   
     multi_agent_team = Agent(
         name="Multi Agent Team",
-        # team=[search_agent, analyze_image_agent, tokens_agent, swap_agent, limit_order_agent, cancel_orders_agent],
         tools = tools,
-        provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
-        description="""You are PlutonAI.""",
+        model=OpenAIChat(id="gpt-4o-mini", temperature = 0.3, max_tokens = 16000),
+        description="""You are PlutonAI, an expert in analyzing images and charts,... etc""",
         instructions=[
             "Carefully read and analyze questions to understand user requirements ",
             "Consider whether it is necessary to use tools to fulfill the user's request. If so, determine which tools to use and execute them to obtain output.",
-            "Use `search` tools to search the web for accurate and up-to-date information before answering user questions that require providing knowledge or real-time information.",
+            "Use search tools to search the web for accurate and up-to-date information before answering user questions that require providing knowledge",
             "If the user asks about a wallet, ask the wallet agent to get information about the wallet. If the wallet is not generated, generate a new wallet.",
             "Before calling wallet agent, you must warn the user about the risk of revealing their wallet information and ask for their consent to proceed.",
-            "If the user sends an image link or requests image analysis, use tool `analyze_image` to analyze image and provide a analysis.",
+            "If the user sends an image link or requests image analysis, use tool analyze image to analyze image and provide a analysis.",
             "If the user asks about a trade, call the trader agent to trade on the market.",
-            "If the user asks about a coin, use the `get_tokens_information` tool to provide a brief summary of the coin.",
+            "If the user asks about coins, tokens, or crypto trends, use the suggest tokens tool to provide a brief summary of the coin.",
             "Finally, provide a thoughtful and engaging summary. Not include any tool calls",
             "Response could include emojis.",
             "Before execute any tool, notify the user your action",
-            "Create detailed, accurate and easy-to-understand answers",
             "Ask clarifying questions if the query is unclear",
             "Double check answers to ensure complete and accurate information",
-            "Do not provide tool names, function names, or disclaimers in the response",
             "You can ONLY use the tools following:  ",
-            f"{tools}"
+            f"{tools}",
+            
+            
+            
+            "IMPORTANT: DO NOT INCLUDE TOOLS NAME, FUNCTIONS NAME, TOOLS CALL in your response."
         ],
         show_tool_calls=True,
         markdown=True,
@@ -296,23 +143,24 @@ def call_agent(
         num_history_responses=5,
         add_chat_history_to_messages=True,
         user_id=user_id,
-        debug_mode=True,
+        debug_mode = True,
         add_datetime_to_instructions=True,
         read_tool_call_history=True,
         add_context=True
     )
-
+    multi_agent_team.print_response(message=message + " " + "\n".join(images), stream=stream, markdown = True)
     return multi_agent_team.run(message=message + " " + "\n".join(images), stream=stream)
 
 
 if __name__ == "__main__":
     # Chạy hàm call_agent với các tham số mẫu
     user_id = "phuctinh"
-    session_id = "abđvđ"
+    session_id = "fafsfkksaffdff"
     while True:
         message = input("Nhập message:     ")
         if message in ["q", "exit"]:
             break
         response = call_agent(message=message, session_id=session_id, user_id=user_id)
-        print(response)  # In ra phản hồi từ hàm call_agent
+        # print("=============================")
+        # print(response)  # In ra phản hồi từ hàm call_agent
     

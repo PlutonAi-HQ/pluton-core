@@ -19,7 +19,7 @@ def analyze_image(url: str, query: str, user_id: str) -> str:
     Use this tool to analyze images to extract features, identify objects, and provide a detailed description of the image. It is also useful for providing investment strategies related to the identified elements.
 
     Args:
-        url (str): URL to image for analysis.
+        urls (str):  URL to image for analysis.
         query (str): Query string to guide the analysis.
         user_id (str): User ID to identify the user.
 

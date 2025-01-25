@@ -1,6 +1,8 @@
 import requests
 from constants import MARKET_CAP
 from phi.tools import Toolkit
+from phi.utils.log import logger
+
 def rename_keys(data):
     # Định nghĩa từ điển ánh xạ các key cũ sang key mới
     key_mapping = {
@@ -27,71 +29,67 @@ def rename_keys(data):
     
     return data
 
+def fetcher( url: str):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        return {"status": "success", "data": response.json()}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
-class TokenTrending(Toolkit):
-    def __init__(self):
-        super().__init__(name = "token_suggestion")
-        self.register(self.get_tokens_information)
+def fetch_token_boosts():
+    try:
+        url = "https://api.dexscreener.com/token-boosts/top/v1"
+        res = fetcher(url)
+        if res["status"] == "success":
+            boosts = res.get("data", {})
+            return boosts
 
-    def _fetcher(self, url: str):
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-            return {"status": "success", "data": response.json()}
-        except Exception as e:
-            return {"status": "error", "message": str(e)}
+        else:
+            return {"status": "error", "message": res["message"]}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
-    def fetch_token_boosts(self):
-        try:
-            url = "https://api.dexscreener.com/token-boosts/top/v1"
-            res = self._fetcher(url)
-            if res["status"] == "success":
-                boosts = res.get("data", {})
-                return boosts
 
-            else:
-                return {"status": "error", "message": res["message"]}
-        except Exception as e:
-            return {"status": "error", "message": str(e)}
     
-    def get_tokens_information(self):
+def fetch_token_rankings():
+    try:
+        url = "https://gmgn.ai/defi/quotation/v1/rank/sol/wallets/30d?orderby=pnl_30d&direction=desc"
+        res = fetcher(url)
+        if res["status"] == "success":
+            data = res.get("data", {})
+            data = data.get("data", {})
+            rankings = data.get("rank", {})
+            return rankings
+        else:
+            return {"status": "error", "message": res["message"]}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+def get_tokens_information(chainId: str):
         """
-        This agent is useful for suggesting trending cryptocurrencies.
+        This tool is designed to provide a comprehensive list of information about tokens and coins.
 
         Args:
-            None
+            chainId(str): The id of chain. Default is "solana"
 
         Returns:
-            list: A list of dictionaries containing information about tokens with market capitalization over 300k.
+            A list of dictionaries containing information about tokens with market capitalization over 300k.
         """
+        logger.info("Tool: Suggest")
         tokens_address = []
-        tokens = self.fetch_token_boosts()
+        tokens = fetch_token_boosts()
         for token in tokens:
             tokens_address.append(token['tokenAddress'])
         tokens_address_string = ",".join(tokens_address)
         chainId = "solana"
         try:
             url = f"https://api.dexscreener.com/tokens/v1/{chainId}/{tokens_address_string}"
-            res = self._fetcher(url)
+            res = fetcher(url)
             if res["status"] == "success":
                 tokens_information = res.get("data", {})
                 tokens_infor_over_300k = [rename_keys(item) for item in tokens_information if item['marketCap'] >= MARKET_CAP ]
-                return tokens_infor_over_300k
+                return"Below are a few trending tokens today:\n" +  str(tokens_infor_over_300k[:10])
 
-            else:
-                return {"status": "error", "message": res["message"]}
-        except Exception as e:
-            return {"status": "error", "message": str(e)}
-        
-    def fetch_token_rankings(self):
-        try:
-            url = "https://gmgn.ai/defi/quotation/v1/rank/sol/wallets/30d?orderby=pnl_30d&direction=desc"
-            res = self._fetcher(url)
-            if res["status"] == "success":
-                data = res.get("data", {})
-                data = data.get("data", {})
-                rankings = data.get("rank", {})
-                return rankings
             else:
                 return {"status": "error", "message": res["message"]}
         except Exception as e:

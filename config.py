@@ -13,7 +13,7 @@ class Settings:
     RATE_LIMIT_WINDOW = int(os.getenv("RATE_LIMIT_WINDOW", 60))
     RATE_LIMIT_MAX_REQUESTS = int(os.getenv("RATE_LIMIT_MAX_REQUESTS", 5))
     FILE_PREFIX = os.getenv("FILE_PREFIX", "pluton_")
-
+    SEARXNG_HOST = os.getenv("SEARXNG_HOST")
     SERVICE_JUPITER_BASE_URL = os.getenv("SERVICE_JUPITER_BASE_URL")
 
     @property

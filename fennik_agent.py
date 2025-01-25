@@ -106,168 +106,168 @@ def call_agent(
             limit_order,
             cancel_all_orders,
         ]
-    print("toools:    \n", tools)
-    search_agent = Agent(provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-pro"),
-        name="Web Search Agent",
-        role = "You are PlutonAI, Search the web for accurate and up-to-date information",
-        instruction =[
-        "Always include sources and citations",
-        "Verify information from multiple sources when possible",
-        "Present information in a clear, structured format",
-    ],
-    tools = [search],
-    show_tool_calls=True,
-    markdown=True,
-    storage=storage,
-    tool_choice = 'auto',
-    read_chat_history=True,
-    session_id=session_id,
-    num_history_responses=5,
-    add_chat_history_to_messages=True,
-    user_id=user_id,
-    debug_mode=True,
-    add_datetime_to_instructions=True,
-    read_tool_call_history=True,
-    monitoring=True)
+    # print("toools:    \n", tools)
+    # search_agent = Agent(provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
+    #     name="Web Search Agent",
+    #     role = "You are PlutonAI, Search the web for accurate and up-to-date information",
+    #     instruction =[
+    #     "Always include sources and citations",
+    #     "Verify information from multiple sources when possible",
+    #     "Present information in a clear, structured format",
+    # ],
+    # tools = [search],
+    # show_tool_calls=True,
+    # markdown=True,
+    # storage=storage,
+    # tool_choice = 'auto',
+    # read_chat_history=True,
+    # session_id=session_id,
+    # num_history_responses=5,
+    # add_chat_history_to_messages=True,
+    # user_id=user_id,
+    # debug_mode=True,
+    # add_datetime_to_instructions=True,
+    # read_tool_call_history=True,
+    # monitoring=True)
     
-    analyze_image_agent = Agent(provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-pro"),
-        name="Image Analysis Agent",
-        role = "You are PlutonAI, an expert in analyzing images and charts related to cryptocurrency and blockchain.",
-        instruction = [
-        "Thoroughly examine images and charts to identify key elements and features.",
-        "Provide detailed descriptions of the content of images, including relevant context or implications.",
-        "Identify and describe key technical indicators, price patterns, market trends, and network metrics for charts.",
-        "Interpret the data using appropriate analytical techniques and frameworks.",
-        "Offer well-reasoned insights, predictions, and trading/investment recommendations based on the analysis.",
-        "Ensure the analysis is data-driven, objective, and tailored to the user's needs.",
-        "Maintain a friendly, helpful, and professional tone throughout interactions."
-    ],
-    tools = [analyze_image],
-    tool_choice = 'auto',
-    show_tool_calls=True,
-    markdown=True,
-    storage=storage,
-    read_chat_history=True,
-    session_id=session_id,
-    num_history_responses=5,
-    add_chat_history_to_messages=True,
-    user_id=user_id,
-    debug_mode=True,
-    add_datetime_to_instructions=True,
-    read_tool_call_history=True,
-    monitoring=True)
+    # analyze_image_agent = Agent(provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
+    #     name="Image Analysis Agent",
+    #     role = "You are PlutonAI, an expert in analyzing images and charts related to cryptocurrency and blockchain.",
+    #     instruction = [
+    #     "Thoroughly examine images and charts to identify key elements and features.",
+    #     "Provide detailed descriptions of the content of images, including relevant context or implications.",
+    #     "Identify and describe key technical indicators, price patterns, market trends, and network metrics for charts.",
+    #     "Interpret the data using appropriate analytical techniques and frameworks.",
+    #     "Offer well-reasoned insights, predictions, and trading/investment recommendations based on the analysis.",
+    #     "Ensure the analysis is data-driven, objective, and tailored to the user's needs.",
+    #     "Maintain a friendly, helpful, and professional tone throughout interactions."
+    # ],
+    # tools = [analyze_image],
+    # tool_choice = 'auto',
+    # show_tool_calls=True,
+    # markdown=True,
+    # storage=storage,
+    # read_chat_history=True,
+    # session_id=session_id,
+    # num_history_responses=5,
+    # add_chat_history_to_messages=True,
+    # user_id=user_id,
+    # debug_mode=True,
+    # add_datetime_to_instructions=True,
+    # read_tool_call_history=True,
+    # monitoring=True)
     
 
-    # Tạo agent cho tool `get_tokens_information`
-    tokens_agent = Agent(
-        provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-pro"),
-        name="Tokens Trend Agent",
-        role="You are PlutonAI, an expert in providing recommendations for trending tokens.",
-        instruction=[
-            "Provide information and recommendations about trending tokens.",
-            "Include market data, recent performance, and news related to these tokens.",
-            "Suggest tokens that are currently popular and have potential for growth.",
-        ],
-        tools=[get_tokens_information],
-        show_tool_calls=True,
-        markdown=True,
-        tool_choice = 'auto',
-        storage=storage,
-        read_chat_history=True,
-        session_id=session_id,
-        num_history_responses=5,
-        add_chat_history_to_messages=True,
-        user_id=user_id,
-        debug_mode=True,
-        add_datetime_to_instructions=True,
-        read_tool_call_history=True,
-        monitoring=True
-    )
+    # # Tạo agent cho tool `get_tokens_information`
+    # tokens_agent = Agent(
+    #     provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
+    #     name="Tokens Trend Agent",
+    #     role="You are PlutonAI, an expert in providing recommendations for trending tokens.",
+    #     instruction=[
+    #         "Provide information and recommendations about trending tokens.",
+    #         "Include market data, recent performance, and news related to these tokens.",
+    #         "Suggest tokens that are currently popular and have potential for growth.",
+    #     ],
+    #     tools=[get_tokens_information],
+    #     show_tool_calls=True,
+    #     markdown=True,
+    #     tool_choice = 'auto',
+    #     storage=storage,
+    #     read_chat_history=True,
+    #     session_id=session_id,
+    #     num_history_responses=5,
+    #     add_chat_history_to_messages=True,
+    #     user_id=user_id,
+    #     debug_mode=True,
+    #     add_datetime_to_instructions=True,
+    #     read_tool_call_history=True,
+    #     monitoring=True
+    # )
 
-    # Tạo agent cho tool `swap_token`
-    swap_agent = Agent(
-        provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-pro"),
-        name="Token Swap Agent",
-        role="You are PlutonAI, an expert in swapping tokens.",
-        instruction=[
-            "Assist users in swapping tokens efficiently.",
-            "Provide information about swap rates and fees.",
-            "Ensure the process is secure and user-friendly.",
-        ],
-        tools=[swap_token],
-        show_tool_calls=True,
-        markdown=True,   
-        tool_choice = 'auto',
-        storage=storage,
-        read_chat_history=True,
-        session_id=session_id,
-        num_history_responses=5,
-        add_chat_history_to_messages=True,
-        user_id=user_id,
-        debug_mode=True,
-        add_datetime_to_instructions=True,
-        read_tool_call_history=True,
-        monitoring=True
-    )
+    # # Tạo agent cho tool `swap_token`
+    # swap_agent = Agent(
+    #     provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
+    #     name="Token Swap Agent",
+    #     role="You are PlutonAI, an expert in swapping tokens.",
+    #     instruction=[
+    #         "Assist users in swapping tokens efficiently.",
+    #         "Provide information about swap rates and fees.",
+    #         "Ensure the process is secure and user-friendly.",
+    #     ],
+    #     tools=[swap_token],
+    #     show_tool_calls=True,
+    #     markdown=True,   
+    #     tool_choice = 'auto',
+    #     storage=storage,
+    #     read_chat_history=True,
+    #     session_id=session_id,
+    #     num_history_responses=5,
+    #     add_chat_history_to_messages=True,
+    #     user_id=user_id,
+    #     debug_mode=True,
+    #     add_datetime_to_instructions=True,
+    #     read_tool_call_history=True,
+    #     monitoring=True
+    # )
 
-    # Tạo agent cho tool `limit_order`
-    limit_order_agent = Agent(
-        provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-pro"),
-        name="Limit Order Agent",
-        role="You are PlutonAI, an expert in placing limit orders.",
-        instruction=[
-            "Help users place limit orders on the market.",
-            "Provide guidance on setting order parameters.",
-            "Ensure users understand the risks involved.",
-        ],
-        tools=[limit_order],
-        show_tool_calls=True,
-        markdown=True,
-        tool_choice = 'auto',
-        storage=storage,
-        read_chat_history=True,
-        session_id=session_id,
-        num_history_responses=5,
-        add_chat_history_to_messages=True,
-        user_id=user_id,
-        debug_mode=True,
-        add_datetime_to_instructions=True,
-        read_tool_call_history=True,
-        monitoring=True
-    )
+    # # Tạo agent cho tool `limit_order`
+    # limit_order_agent = Agent(
+    #     provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
+    #     name="Limit Order Agent",
+    #     role="You are PlutonAI, an expert in placing limit orders.",
+    #     instruction=[
+    #         "Help users place limit orders on the market.",
+    #         "Provide guidance on setting order parameters.",
+    #         "Ensure users understand the risks involved.",
+    #     ],
+    #     tools=[limit_order],
+    #     show_tool_calls=True,
+    #     markdown=True,
+    #     tool_choice = 'auto',
+    #     storage=storage,
+    #     read_chat_history=True,
+    #     session_id=session_id,
+    #     num_history_responses=5,
+    #     add_chat_history_to_messages=True,
+    #     user_id=user_id,
+    #     debug_mode=True,
+    #     add_datetime_to_instructions=True,
+    #     read_tool_call_history=True,
+    #     monitoring=True
+    # )
 
-    # Tạo agent cho tool `cancel_all_orders`
-    cancel_orders_agent = Agent(
-        provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-pro"),
-        name="Cancel All Orders Agent",
-        role="You are PlutonAI, an expert in canceling orders.",
-        instruction=[
-            "Assist users in canceling all their active orders.",
-            "Provide confirmation and details of canceled orders.",
-            "Ensure the process is clear and straightforward.",
-        ],
-        tools=[cancel_all_orders],
-        show_tool_calls=True,
-        tool_choice = 'auto',
-        markdown=True,
-        storage=storage,
-        read_chat_history=True,
-        session_id=session_id,
-        num_history_responses=5,
-        add_chat_history_to_messages=True,
-        user_id=user_id,
-        debug_mode=True,
-        add_datetime_to_instructions=True,
-        read_tool_call_history=True,
-        monitoring=True
-    )
+    # # Tạo agent cho tool `cancel_all_orders`
+    # cancel_orders_agent = Agent(
+    #     provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
+    #     name="Cancel All Orders Agent",
+    #     role="You are PlutonAI, an expert in canceling orders.",
+    #     instruction=[
+    #         "Assist users in canceling all their active orders.",
+    #         "Provide confirmation and details of canceled orders.",
+    #         "Ensure the process is clear and straightforward.",
+    #     ],
+    #     tools=[cancel_all_orders],
+    #     show_tool_calls=True,
+    #     tool_choice = 'auto',
+    #     markdown=True,
+    #     storage=storage,
+    #     read_chat_history=True,
+    #     session_id=session_id,
+    #     num_history_responses=5,
+    #     add_chat_history_to_messages=True,
+    #     user_id=user_id,
+    #     debug_mode=True,
+    #     add_datetime_to_instructions=True,
+    #     read_tool_call_history=True,
+    #     monitoring=True
+    # )
     
     # print("TEAM:     \n", [search_agent, analyze_image_agent, tokens_agent, swap_agent, limit_order_agent, cancel_orders_agent])
     multi_agent_team = Agent(
         name="Multi Agent Team",
         # team=[search_agent, analyze_image_agent, tokens_agent, swap_agent, limit_order_agent, cancel_orders_agent],
         tools = tools,
-        provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-pro"),
+        provider=Gemini(api_key=settings.GEMINI_API_KEY, id="gemini-1.5-flash-latest"),
         description="""You are PlutonAI.""",
         instructions=[
             "Carefully read and analyze questions to understand user requirements ",
@@ -308,7 +308,7 @@ def call_agent(
 if __name__ == "__main__":
     # Chạy hàm call_agent với các tham số mẫu
     user_id = "phuctinh"
-    session_id = "aaaaâaaâ"
+    session_id = "abđvđ"
     while True:
         message = input("Nhập message:     ")
         if message in ["q", "exit"]:

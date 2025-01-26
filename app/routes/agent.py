@@ -57,6 +57,7 @@ def agent_call(
                 body.message, body.session_id, body.images, str(user.id)
             )
             is_tool = False
+            count = 0
             for chunk in response:
                 if chunk.content == "\nRunning:" and count == 0:
                     is_tool = True

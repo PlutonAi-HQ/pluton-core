@@ -56,9 +56,16 @@ def agent_call(
             response = agent_controller.call_agent(
                 body.message, body.session_id, body.images, str(user.id)
             )
+            is_tool = False
             for chunk in response:
-                aggregated_response += chunk.content
-                yield f"event: token\ndata: {chunk.content}\n\n"
+                if chunk.content == "\nRunning:" and count == 0:
+                    is_tool = True
+                if is_tool and chunk.content == "\n\n":
+                    is_tool = False
+                    count = 1
+                if not is_tool and count == 1:
+                    aggregated_response += chunk.content
+                    yield f"event: token\ndata: {chunk.content}\n\n"
             yield f"event: end\ndata: {aggregated_response}\n\n"
 
         return StreamingResponse(event_generator(), media_type="text/event-stream")

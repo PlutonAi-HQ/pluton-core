@@ -133,7 +133,8 @@ def call_agent(
             
             
             
-            "IMPORTANT: DO NOT INCLUDE TOOLS NAME, FUNCTIONS NAME, TOOLS CALL in your response."
+            "IMPORTANT: DO NOT INCLUDE TOOLS NAME, FUNCTIONS NAME, TOOLS CALL in your response.",
+            "Return your response in MARKDOWN format."
         ],
         show_tool_calls=True,
         markdown=True,
@@ -143,24 +144,38 @@ def call_agent(
         num_history_responses=5,
         add_chat_history_to_messages=True,
         user_id=user_id,
-        debug_mode = True,
+        # debug_mode = True,
         add_datetime_to_instructions=True,
         read_tool_call_history=True,
         add_context=True
     )
-    multi_agent_team.print_response(message=message + " " + "\n".join(images), stream=stream, markdown = True)
+    # multi_agent_team.print_response(message=message + " " + "\n".join(images), stream=stream, markdown = True)
     return multi_agent_team.run(message=message + " " + "\n".join(images), stream=stream)
 
 
 if __name__ == "__main__":
     # Chạy hàm call_agent với các tham số mẫu
     user_id = "phuctinh"
-    session_id = "fafsgggsggsfkksaffdff"
+    session_id = "hsffdfgdgdfghsdssgsfshd"
     while True:
         message = input("Nhập message:     ")
         if message in ["q", "exit"]:
             break
-        response = call_agent(message=message, session_id=session_id, user_id=user_id)
+        response = call_agent(message=message, session_id=session_id, user_id=user_id, stream = True)
         print("=============================")
-        print(response)  # In ra phản hồi từ hàm call_agent
+        aggregated_response = ""
+        list_tokens = []
+        count = 0
+        is_tool = False
+        for chunk in response:
+                if chunk.content == "\nRunning:" and count == 0:
+                    is_tool = True
+                if is_tool and chunk.content == "\n\n":
+                    is_tool = False
+                    count = 1
+                if not is_tool and count == 1:
+                    aggregated_response += chunk.content 
+            # print(f"event: token\ndata: {chunk.content}\n\n")
+        print( f"event: end\ndata: {aggregated_response}\n\n")
+  # In ra phản hồi từ hàm call_agent
     

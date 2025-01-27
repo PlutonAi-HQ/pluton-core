@@ -17,12 +17,13 @@ from constants import image_analysis_system_prompt
 from log import logger
 from rich.console import Console
 from rich.json import JSON
-from tools.jupiter import swap_token, limit_order, cancel_all_orders
+from tools.jupiter import JupiterTool
 from phi.model.azure import AzureOpenAIChat
 
 console = Console()
 from phi.model.openai import OpenAIChat
 from phi.model.aws.claude import Claude
+from uuid import uuid4
 
 db_url = settings.POSTGRES_URL
 storage = PgAgentStorage(
@@ -102,9 +103,7 @@ def call_agent(
         search,
         analyze_image,
         get_tokens_information,
-        swap_token,
-        limit_order,
-        cancel_all_orders,
+        JupiterTool(),
     ]
     #     azure_model = AzureOpenAIChat(
     #     id="gpt-4o-mini",
@@ -131,9 +130,8 @@ def call_agent(
             "Before execute any tool, notify the user your action",
             "Ask clarifying questions if the query is unclear",
             "Double check answers to ensure complete and accurate information",
-            "You can ONLY use the tools following:  ",
-            f"{tools}",
-            "IMPORTANT: DO NOT INCLUDE TOOLS NAME, FUNCTIONS NAME, TOOLS CALL in your response.",
+            # "You can ONLY use the tools following:  ",
+            # f"{tools}",
             "Return your response in MARKDOWN format.",
         ],
         # show_tool_calls=True,
@@ -144,10 +142,13 @@ def call_agent(
         num_history_responses=5,
         add_chat_history_to_messages=True,
         user_id=user_id,
-        # debug_mode = True,
+        debug_mode=True,
         add_datetime_to_instructions=True,
         read_tool_call_history=True,
-        # add_context=True,
+        context={
+            "user_id": user_id,
+            "session_id": session_id,
+        },
     )
     # multi_agent_team.print_response(message=message + " " + "\n".join(images), stream=stream, markdown = True)
     return multi_agent_team.run(
@@ -157,8 +158,8 @@ def call_agent(
 
 if __name__ == "__main__":
     # Chạy hàm call_agent với các tham số mẫu
-    user_id = "phuctinh"
-    session_id = "hsffdfgdgdfghsdssgsfshd"
+    user_id = "50c96bb8-359e-4adf-bec7-4532895b2bbb"
+    session_id = str(uuid4())
     while True:
         message = input("Nhập message:     ")
         if message in ["q", "exit"]:
@@ -166,19 +167,7 @@ if __name__ == "__main__":
         response = call_agent(
             message=message, session_id=session_id, user_id=user_id, stream=True
         )
-        print("=============================")
         aggregated_response = ""
-        list_tokens = []
-        count = 0
-        is_tool = False
         for chunk in response:
-            if chunk.content == "\nRunning:" and count == 0:
-                is_tool = True
-            if is_tool and chunk.content == "\n\n":
-                is_tool = False
-                count = 1
-            if not is_tool and count == 1:
-                aggregated_response += chunk.content
-        # print(f"event: token\ndata: {chunk.content}\n\n")
-        print(f"event: end\ndata: {aggregated_response}\n\n")
-# In ra phản hồi từ hàm call_agent
+            aggregated_response += chunk.content
+        print(aggregated_response)

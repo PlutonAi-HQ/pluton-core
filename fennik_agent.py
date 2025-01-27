@@ -19,9 +19,11 @@ from rich.console import Console
 from rich.json import JSON
 from tools.jupiter import swap_token, limit_order, cancel_all_orders
 from phi.model.azure import AzureOpenAIChat
+
 console = Console()
 from phi.model.openai import OpenAIChat
 from phi.model.aws.claude import Claude
+
 db_url = settings.POSTGRES_URL
 storage = PgAgentStorage(
     # store sessions in the ai.sessions table
@@ -97,22 +99,23 @@ def call_agent(
     stream: bool = False,
 ):
     tools = [
-            search,
-            analyze_image,
-            get_tokens_information,
-            swap_token,
-            limit_order,
-            cancel_all_orders]
-#     azure_model = AzureOpenAIChat(
-#     id="gpt-4o-mini",
-#     api_key="60faaa4f139c4047b60657b4d2393efc",
-#     azure_endpoint="https://aitoolvbi.openai.azure.com/",
-#     azure_deployment="gpt-4o-mini",
-# )   
+        search,
+        analyze_image,
+        get_tokens_information,
+        swap_token,
+        limit_order,
+        cancel_all_orders,
+    ]
+    #     azure_model = AzureOpenAIChat(
+    #     id="gpt-4o-mini",
+    #     api_key="60faaa4f139c4047b60657b4d2393efc",
+    #     azure_endpoint="https://aitoolvbi.openai.azure.com/",
+    #     azure_deployment="gpt-4o-mini",
+    # )
     multi_agent_team = Agent(
         name="Multi Agent Team",
-        tools = tools,
-        model=OpenAIChat(id="gpt-4o-mini", temperature = 0.3, max_tokens = 16000),
+        tools=tools,
+        model=OpenAIChat(id="gpt-4o-mini", temperature=0.3, max_tokens=16000),
         description="""You are PlutonAI, an expert in analyzing images and charts,... etc""",
         instructions=[
             "Carefully read and analyze questions to understand user requirements ",
@@ -130,13 +133,10 @@ def call_agent(
             "Double check answers to ensure complete and accurate information",
             "You can ONLY use the tools following:  ",
             f"{tools}",
-            
-            
-            
             "IMPORTANT: DO NOT INCLUDE TOOLS NAME, FUNCTIONS NAME, TOOLS CALL in your response.",
-            "Return your response in MARKDOWN format."
+            "Return your response in MARKDOWN format.",
         ],
-        show_tool_calls=True,
+        # show_tool_calls=True,
         markdown=True,
         storage=storage,
         read_chat_history=True,
@@ -147,10 +147,12 @@ def call_agent(
         # debug_mode = True,
         add_datetime_to_instructions=True,
         read_tool_call_history=True,
-        add_context=True
+        # add_context=True,
     )
     # multi_agent_team.print_response(message=message + " " + "\n".join(images), stream=stream, markdown = True)
-    return multi_agent_team.run(message=message + " " + "\n".join(images), stream=stream)
+    return multi_agent_team.run(
+        message=message + " " + "\n".join(images), stream=stream
+    )
 
 
 if __name__ == "__main__":
@@ -161,21 +163,22 @@ if __name__ == "__main__":
         message = input("Nhập message:     ")
         if message in ["q", "exit"]:
             break
-        response = call_agent(message=message, session_id=session_id, user_id=user_id, stream = True)
+        response = call_agent(
+            message=message, session_id=session_id, user_id=user_id, stream=True
+        )
         print("=============================")
         aggregated_response = ""
         list_tokens = []
         count = 0
         is_tool = False
         for chunk in response:
-                if chunk.content == "\nRunning:" and count == 0:
-                    is_tool = True
-                if is_tool and chunk.content == "\n\n":
-                    is_tool = False
-                    count = 1
-                if not is_tool and count == 1:
-                    aggregated_response += chunk.content 
-            # print(f"event: token\ndata: {chunk.content}\n\n")
-        print( f"event: end\ndata: {aggregated_response}\n\n")
-  # In ra phản hồi từ hàm call_agent
-    
+            if chunk.content == "\nRunning:" and count == 0:
+                is_tool = True
+            if is_tool and chunk.content == "\n\n":
+                is_tool = False
+                count = 1
+            if not is_tool and count == 1:
+                aggregated_response += chunk.content
+        # print(f"event: token\ndata: {chunk.content}\n\n")
+        print(f"event: end\ndata: {aggregated_response}\n\n")
+# In ra phản hồi từ hàm call_agent

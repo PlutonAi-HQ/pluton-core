@@ -21,8 +21,10 @@ class User(Base):
     wallets = relationship(
         "Wallet", back_populates="user", cascade="all, delete-orphan", lazy="select"
     )
+    used_ref_code = Column(String, default="")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    referral = relationship("Referral", back_populates="owner", uselist=False)
 
     def __repr__(self):
         return f"<User(id={self.id}, email={self.email}, username={self.username})>"

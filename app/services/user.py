@@ -1,9 +1,16 @@
 from sqlalchemy.orm import Session
 from app.models.user import User
+from app.models.referral import Referral
 from app.dto import UserRequestDTO
 from app.core.exceptions import AppException, ErrorCode
 from sqlalchemy.exc import IntegrityError
+import hashlib
 
+def ref_generator(input_string):
+    hash_object = hashlib.sha256(input_string.encode())
+    full_hash = hash_object.hexdigest()
+    short_hash = full_hash[:6]
+    return short_hash
 
 class UserService:
     def __init__(self, db: Session):
@@ -12,6 +19,9 @@ class UserService:
     def create_user(self, user: UserRequestDTO) -> User:
         try:
             user_model = User(**user.model_dump())
+            ref_model = Referral(owner=user_model, referral_code=ref_generator(user_model.username))
+            user_model.ref_code = ref_model.referral_code
+            self.db.add(ref_model)
             self.db.add(user_model)
             self.db.commit()
             return user_model

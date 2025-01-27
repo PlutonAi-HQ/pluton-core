@@ -94,3 +94,7 @@ class SocialCallbackRequest(BaseModel):
     avatar: Optional[str] = Field(
         None, description="The avatar", example="https://avatar.iran.liara.run/public"
     )
+    
+class UseRefCodeRequest(BaseModel):
+    access_token: str
+    ref_code: str

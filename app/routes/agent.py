@@ -19,7 +19,7 @@ from app.database import get_db
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+router = APIRouter(tags=["agent"])
 
 
 @router.post("/agent/history")

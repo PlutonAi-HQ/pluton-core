@@ -5,7 +5,7 @@ from app.dto import UserRequestDTO, UserResponseDTO
 from app.database.client import get_db
 from log import logger
 
-router = APIRouter()
+router = APIRouter(tags=["user"])
 
 
 @router.post("/users")

@@ -89,12 +89,12 @@ class WalletResponseDTO(BaseModel):
 
 
 class SocialCallbackRequest(BaseModel):
-    username: str = Field(..., description="The username", example="john_doe")
-    email: str = Field(..., description="The email", example="john_doe@example.com")
+    username: str = Field(..., description="The username", example="odin")
+    email: str = Field(..., description="The email", example="odin@example.com")
     avatar: Optional[str] = Field(
         None, description="The avatar", example="https://avatar.iran.liara.run/public"
     )
-    
+
+
 class UseRefCodeRequest(BaseModel):
-    access_token: str
     ref_code: str

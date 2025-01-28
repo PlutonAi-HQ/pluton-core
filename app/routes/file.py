@@ -8,7 +8,7 @@ from app.dto import FileResponse
 from app.models.user import User
 from app.middleware.auth import verify_token
 
-router = APIRouter()
+router = APIRouter(tags=["file"])
 
 
 @router.post("/file/upload")

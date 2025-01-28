@@ -4,7 +4,7 @@ from app.dto import LoginRequest, SignupRequest, SocialCallbackRequest
 from app.controllers.auth import AuthController
 from app.database import get_db
 
-router = APIRouter()
+router = APIRouter(tags=["auth"])
 
 
 @router.post("/login")

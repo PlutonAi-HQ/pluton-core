@@ -1,45 +1,109 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from app.models.referral import Referral
 from app.models.user import User
 from app.core.exceptions import AppException, ErrorCode
-from sqlalchemy.exc import IntegrityError
+from typing import Optional
 
 
 class ReferralService:
     def __init__(self, db: Session):
         self.db = db
-    def create_referral(self, username, referral_code) -> Referral:
+
+    def get_referral_by_user_id(self, user_id: str) -> Referral:
+        return self.db.query(Referral).filter_by(owner_id=user_id).first()
+
+    def create_referral(self, user_id: str) -> Referral:
+        """
+        Tạo referral code mới cho user
+        """
         try:
-            referral_model = Referral(referral_code=referral_code)
+            # Tìm user theo username
+            user = self.db.query(User).filter_by(id=user_id).first()
+            if not user:
+                raise AppException(
+                    error_code=ErrorCode.USER_NOT_FOUND.value,
+                    message=ErrorCode.USER_NOT_FOUND.name,
+                    status_code=404,
+                )
+
+            # Tạo referral và liên kết với user
+            referral_model = Referral(owner_id=user.id)
             self.db.add(referral_model)
             self.db.commit()
+            self.db.refresh(referral_model)
             return referral_model
+
         except IntegrityError as e:
             self.db.rollback()
-            raise e
+            # Xử lý trùng lặp referral code (nếu có unique constraint)
+            if "duplicate key value" in str(e):
+                raise AppException(
+                    error_code=ErrorCode.DUPLICATE_ENTRY.value,
+                    message=ErrorCode.DUPLICATE_ENTRY.name,
+                    status_code=409,
+                )
+            raise AppException.from_exception(e)
+
         except Exception as e:
             self.db.rollback()
             raise AppException(
-                error_code=ErrorCode.INTERNAL_ERROR,
-                message="An unexpected error occurred",
+                error_code=ErrorCode.INTERNAL_ERROR.value,
+                message=ErrorCode.INTERNAL_ERROR.name,
                 status_code=500,
                 extra={"original_error": str(e)},
             )
-    def get_all_referrals(self):
+
+    def get_all_referrals(self) -> list[Referral]:
+        """Lấy danh sách tất cả referral"""
         return self.db.query(Referral).all()
 
-    def use_ref_code(self, user_id: str, ref_code: str):
-        user = self.db.query(User).filter_by(id=user_id).first()
-        if(user):
-            if user.used_ref_code!='':
-                return 403
-        else:
-            return 402    
-        
-        ref = self.db.query(Referral).filter_by(referral_code=ref_code).first()
-        if ref:
+    def use_ref_code(self, user_id: str, ref_code: str) -> None:
+        """
+        Sử dụng referral code
+        """
+        try:
+            # Kiểm tra user
+            user: User = self.db.query(User).get(user_id)
+            if not user:
+                raise AppException(
+                    error_code=ErrorCode.NOT_FOUND.value,
+                    message=ErrorCode.NOT_FOUND.name,
+                    status_code=404,
+                )
+            # Tìm referral code
+            referral: Referral = (
+                self.db.query(Referral).filter_by(referral_code=ref_code).first()
+            )
+            if not referral:
+                raise AppException(
+                    error_code=ErrorCode.NOT_FOUND.value,
+                    message=ErrorCode.NOT_FOUND.name,
+                    status_code=404,
+                )
+
+            # Kiểm tra user đã trong danh sách chưa
+            if user_id in (referral.referred_user_ids or []):
+                raise AppException(
+                    error_code=ErrorCode.DUPLICATE_ENTRY.value,
+                    message=ErrorCode.DUPLICATE_ENTRY.name,
+                    status_code=400,
+                )
+
+            # Cập nhật thông tin
             user.used_ref_code = ref_code
-            ref.total_used += 1
+            referral.referred_user_ids = (referral.referred_user_ids or []) + [user_id]
+
             self.db.commit()
-            return 200
-        return 405
+
+        except AppException:
+            self.db.rollback()
+            raise
+        except Exception as e:
+            self.db.rollback()
+            raise AppException(
+                error_code=ErrorCode.INTERNAL_ERROR.value,
+                message=ErrorCode.INTERNAL_ERROR.name,
+                status_code=500,
+                extra={"original_error": str(e)},
+            )

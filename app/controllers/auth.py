@@ -7,6 +7,7 @@ import jwt
 from config import settings
 from app.services.wallet import WalletService
 from app.dto import SocialCallbackRequest
+from app.services.referral import ReferralService
 
 
 class AuthController:
@@ -69,9 +70,6 @@ class AuthController:
         # TODO: Check to if user exists
         user_service = UserService(self.db)
         user = user_service.get_user_by_email(body.email)
-        if user:
-            print("User already exists")
-            pass
         # TODO: If not, create user
         body.avatar = (
             body.avatar
@@ -82,10 +80,20 @@ class AuthController:
             # TODO: Create wallet
             wallet_service = WalletService(self.db)
             wallet = wallet_service.create_wallet(user.id)
+
+            # TODO: Create referral
+            referral_service = ReferralService(self.db)
+            referral = referral_service.create_referral(user.id)
         # If exists, get wallet info
         else:
+            # User exists, get wallet info
+            print(user)
             wallet_service = WalletService(self.db)
             wallet = wallet_service.get_wallet_by_user_id(user.id)
+            referral_service = ReferralService(self.db)
+            referral = referral_service.get_referral_by_user_id(user.id)
+            if not referral:
+                referral = referral_service.create_referral(user.id)
         # TODO: Generate JWT token
         token = jwt.encode(
             {"sub": str(user.id), "exp": datetime.now() + timedelta(hours=1)},
@@ -104,5 +112,9 @@ class AuthController:
                 "email": user.email,
                 "username": user.username,
                 "avatar": user.avatar,
+            },
+            "referral": {
+                "code": referral.referral_code,
+                "total_used": referral.total_used,
             },
         }

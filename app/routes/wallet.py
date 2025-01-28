@@ -6,7 +6,7 @@ from app.dto import WalletRequestDTO
 from app.database.client import get_db
 from sqlalchemy.orm import Session
 
-router = APIRouter()
+router = APIRouter(tags=["wallet"])
 
 
 @router.post("/wallet/generate")

@@ -23,6 +23,10 @@ class User(Base):
     )
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    referral = relationship(
+        "Referral", back_populates="owner", lazy="select", uselist=False
+    )
+    used_ref_code = Column(String, nullable=True)
 
     def __repr__(self):
         return f"<User(id={self.id}, email={self.email}, username={self.username})>"

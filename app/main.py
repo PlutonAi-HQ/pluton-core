@@ -12,6 +12,7 @@ from app.routes.wallet import router as wallet_router
 from app.routes.file import router as file_router
 from app.routes.user import router as user_router
 from app.routes.wallet import router as wallet_router
+from app.routes.referral import router as referral_router
 from fastapi.responses import JSONResponse
 from app.core.error_handlers import app_exception_handler, integrity_error_handler
 from app.core.exceptions import AppException
@@ -55,6 +56,7 @@ app.include_router(file_router, prefix=PREFIX)
 app.include_router(user_router, prefix=PREFIX)
 app.include_router(wallet_router, prefix=PREFIX)
 app.include_router(auth_router, prefix=PREFIX)
+app.include_router(referral_router, prefix=PREFIX)
 
 
 @app.get(f"{PREFIX}/healthz")

@@ -4,14 +4,6 @@ from app.models.referral import Referral
 from app.dto import UserRequestDTO
 from app.core.exceptions import AppException, ErrorCode
 from sqlalchemy.exc import IntegrityError
-import hashlib
-
-
-def ref_generator(input_string):
-    hash_object = hashlib.sha256(input_string.encode())
-    full_hash = hash_object.hexdigest()
-    short_hash = full_hash[:6]
-    return short_hash
 
 
 class UserService:

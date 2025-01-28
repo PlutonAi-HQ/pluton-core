@@ -81,7 +81,13 @@ class ReferralService:
                     message=ErrorCode.REFERRAL_NOT_FOUND.name,
                     status_code=404,
                 )
-
+            # Check if user_id is owner of referral
+            if user_id == referral.owner_id:
+                raise AppException(
+                    error_code=ErrorCode.REFERRAL_NOT_OWNER.value,
+                    message=ErrorCode.REFERRAL_NOT_OWNER.name,
+                    status_code=400,
+                )
             # Kiểm tra user đã trong danh sách chưa
             if user_id in (referral.referred_user_ids or []):
                 raise AppException(

@@ -17,6 +17,7 @@ class ErrorCode(Enum):
     USER_NOT_FOUND = 1011
     REFERRAL_NOT_FOUND = 1012
     REFERRAL_ALREADY_USED = 1013
+    REFERRAL_NOT_OWNER = 1014
 
 
 class AppException(Exception):

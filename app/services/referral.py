@@ -77,16 +77,16 @@ class ReferralService:
             )
             if not referral:
                 raise AppException(
-                    error_code=ErrorCode.NOT_FOUND.value,
-                    message=ErrorCode.NOT_FOUND.name,
+                    error_code=ErrorCode.REFERRAL_NOT_FOUND.value,
+                    message=ErrorCode.REFERRAL_NOT_FOUND.name,
                     status_code=404,
                 )
 
             # Kiểm tra user đã trong danh sách chưa
             if user_id in (referral.referred_user_ids or []):
                 raise AppException(
-                    error_code=ErrorCode.DUPLICATE_ENTRY.value,
-                    message=ErrorCode.DUPLICATE_ENTRY.name,
+                    error_code=ErrorCode.REFERRAL_ALREADY_USED.value,
+                    message=ErrorCode.REFERRAL_ALREADY_USED.name,
                     status_code=400,
                 )
 

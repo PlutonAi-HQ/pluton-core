@@ -17,7 +17,7 @@ class Referral(Base):
     referred_user_ids = Column(JSONB, default=list)
 
     def __repr__(self):
-        return f"<Referral(id={self.id}, created_at={self.created_at}, total_used={self.total_used})>"
+        return f"<Referral(id={self.id}, created_at={self.created_at}, total_used={self.total_used}), referral_code={self.referral_code}>"
 
     @property
     def total_used(self):

@@ -4,6 +4,7 @@ from app.models.referral import Referral
 from app.models.user import User
 from app.core.exceptions import AppException, ErrorCode
 from typing import Optional
+from app.utils.functions import generate_referral_code
 
 
 class ReferralService:
@@ -28,7 +29,10 @@ class ReferralService:
                 )
 
             # Tạo referral và liên kết với user
-            referral_model = Referral(owner_id=user.id)
+            referral_model = Referral(
+                owner_id=user.id, referral_code=generate_referral_code()
+            )
+            print(referral_model)
             self.db.add(referral_model)
             self.db.commit()
             self.db.refresh(referral_model)

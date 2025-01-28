@@ -7,4 +7,5 @@ def generate_referral_code():
 
 
 if __name__ == "__main__":
-    print(generate_referral_code())
+    for _ in range(100):
+        print(generate_referral_code())

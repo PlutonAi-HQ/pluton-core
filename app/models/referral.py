@@ -11,9 +11,11 @@ class Referral(Base):
     __tablename__ = "referrals"
     id = Column(String, index=True, primary_key=True, default=lambda: str(uuid.uuid4()))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    owner_id = Column(String, ForeignKey("users.id"), nullable=True, unique=True)
+    owner_id = Column(String, ForeignKey("users.id"), nullable=True)
     owner = relationship("User", back_populates="referral")
-    referral_code = Column(String, index=True, default=generate_referral_code)
+    referral_code = Column(
+        String, index=True, default=generate_referral_code, unique=True
+    )
     referred_user_ids = Column(JSONB, default=list)
 
     def __repr__(self):

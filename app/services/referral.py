@@ -5,6 +5,7 @@ from app.models.user import User
 from app.core.exceptions import AppException, ErrorCode
 from typing import Optional
 from app.utils.functions import generate_referral_code
+from log import logger
 
 
 class ReferralService:
@@ -19,7 +20,17 @@ class ReferralService:
         Tạo referral code mới cho user
         """
         try:
-            # Tìm user theo username
+            # Check if referral code already exists
+            referral = self.get_referral_by_user_id(user_id)
+            logger.info(f"Referral: {referral}")
+            if referral:
+                raise AppException(
+                    error_code=ErrorCode.REFERRAL_ALREADY_EXISTS.value,
+                    message=ErrorCode.REFERRAL_ALREADY_EXISTS.name,
+                    status_code=400,
+                )
+            # Tìm user theo user_id
+
             user = self.db.query(User).filter_by(id=user_id).first()
             if not user:
                 raise AppException(
@@ -35,12 +46,12 @@ class ReferralService:
             print(referral_model)
             self.db.add(referral_model)
             self.db.commit()
-            self.db.refresh(referral_model)
             return referral_model
 
         except IntegrityError as e:
             self.db.rollback()
             # Xử lý trùng lặp referral code (nếu có unique constraint)
+            print(e)
             if "duplicate key value" in str(e):
                 raise AppException(
                     error_code=ErrorCode.DUPLICATE_ENTRY.value,

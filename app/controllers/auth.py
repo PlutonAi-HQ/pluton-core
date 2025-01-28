@@ -80,20 +80,15 @@ class AuthController:
             # TODO: Create wallet
             wallet_service = WalletService(self.db)
             wallet = wallet_service.create_wallet(user.id)
-
-            # TODO: Create referral
-            referral_service = ReferralService(self.db)
-            referral = referral_service.create_referral(user.id)
+            print("CREATE REFERRAL NOT EXISTS")
         # If exists, get wallet info
         else:
             # User exists, get wallet info
             print(user)
             wallet_service = WalletService(self.db)
             wallet = wallet_service.get_wallet_by_user_id(user.id)
-            referral_service = ReferralService(self.db)
-            referral = referral_service.get_referral_by_user_id(user.id)
-            if not referral:
-                referral = referral_service.create_referral(user.id)
+        referral_service = ReferralService(self.db)
+        referral = referral_service.get_referral_by_user_id(user.id)
         # TODO: Generate JWT token
         token = jwt.encode(
             {"sub": str(user.id), "exp": datetime.now() + timedelta(hours=1)},

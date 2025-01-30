@@ -4,6 +4,7 @@ from app.models.referral import Referral
 from app.dto import UserRequestDTO
 from app.core.exceptions import AppException, ErrorCode
 from sqlalchemy.exc import IntegrityError
+from app.utils.functions import generate_uuid
 
 
 class UserService:
@@ -12,12 +13,10 @@ class UserService:
 
     def create_user(self, user: UserRequestDTO) -> User:
         try:
-            user_model = User(**user.model_dump())
-            ref_model = Referral(owner=user_model)
-            user_model.ref_code = ref_model.referral_code
-            self.db.add(ref_model)
+            user_model = User(**user.model_dump(), id=generate_uuid())
             self.db.add(user_model)
-            self.db.commit()
+            # self.db.commit()
+
             return user_model
         except IntegrityError as e:
             self.db.rollback()

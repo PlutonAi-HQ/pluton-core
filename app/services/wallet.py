@@ -31,7 +31,7 @@ class WalletService:
         created_wallet = self.generate_wallet()
         wallet_model = Wallet(**created_wallet, user_id=user_id)
         self.db.add(wallet_model)
-        self.db.commit()
+        # self.db.commit()
         return wallet_model
 
     def get_wallet_by_user_id(self, user_id: str) -> Wallet:

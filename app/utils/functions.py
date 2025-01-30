@@ -1,4 +1,5 @@
 import hashlib
+import uuid
 
 
 def ref_generator(input_string):
@@ -6,6 +7,10 @@ def ref_generator(input_string):
     full_hash = hash_object.hexdigest()
     short_hash = full_hash[:6]
     return short_hash
+
+
+def generate_uuid():
+    return str(uuid.uuid4())
 
 
 def generate_referral_code():

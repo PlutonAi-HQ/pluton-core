@@ -21,31 +21,31 @@ class ReferralService:
         """
         try:
             # Check if referral code already exists
-            referral = self.get_referral_by_user_id(user_id)
-            logger.info(f"Referral: {referral}")
-            if referral:
-                raise AppException(
-                    error_code=ErrorCode.REFERRAL_ALREADY_EXISTS.value,
-                    message=ErrorCode.REFERRAL_ALREADY_EXISTS.name,
-                    status_code=400,
-                )
+            # referral = self.get_referral_by_user_id(user_id)
+            # logger.info(f"Referral: {referral}")
+            # if referral:
+            #     raise AppException(
+            #         error_code=ErrorCode.REFERRAL_ALREADY_EXISTS.value,
+            #         message=ErrorCode.REFERRAL_ALREADY_EXISTS.name,
+            #         status_code=400,
+            #     )
             # Tìm user theo user_id
 
-            user = self.db.query(User).filter_by(id=user_id).first()
-            if not user:
-                raise AppException(
-                    error_code=ErrorCode.USER_NOT_FOUND.value,
-                    message=ErrorCode.USER_NOT_FOUND.name,
-                    status_code=404,
-                )
+            # user = self.db.query(User).filter_by(id=user_id).first()
+            # if not user:
+            #     raise AppException(
+            #         error_code=ErrorCode.USER_NOT_FOUND.value,
+            #         message=ErrorCode.USER_NOT_FOUND.name,
+            #         status_code=404,
+            #     )
 
             # Tạo referral và liên kết với user
             referral_model = Referral(
-                owner_id=user.id, referral_code=generate_referral_code()
+                owner_id=user_id, referral_code=generate_referral_code()
             )
             print(referral_model)
             self.db.add(referral_model)
-            self.db.commit()
+            # self.db.commit()
             return referral_model
 
         except IntegrityError as e:

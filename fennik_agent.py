@@ -75,6 +75,7 @@ def get_history(user_id: str, session_id: str = None):
             session_id = session.session_id
             for run in session.memory.get("runs"):
                 user_message = run.get("message").get("content")
+                created_at = run.get("message").get("created_at")
                 agent_message = run.get("response").get("content")
                 history.extend(
                     [
@@ -82,6 +83,7 @@ def get_history(user_id: str, session_id: str = None):
                             "role": "user",
                             "content": user_message,
                             "session_id": session_id,
+                            "created_at": created_at,
                         },
                         {
                             "role": "assistant",

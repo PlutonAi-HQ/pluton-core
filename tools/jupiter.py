@@ -6,14 +6,47 @@ import json
 from phi.agent import Agent
 from phi.tools import Toolkit
 from phi.utils.log import logger
+from app.utils.requests import retry_request
 
 
 class JupiterTool(Toolkit):
     def __init__(self):
         super().__init__(name="jupiter_tools")
+        self.register(self.check_balance)
         self.register(self.swap_token)
         self.register(self.limit_order)
         self.register(self.cancel_all_orders)
+
+    def check_balance(self, agent: Agent, token_address: str) -> str:
+        """
+        Use this tool to check the balance of a user.
+        Args:
+            token_address (str): Mint address of the token.
+        Returns:
+            str: Balance of the user in the token.
+        """
+        user_id = agent.context["user_id"]
+        with pool.connection() as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT * FROM wallets WHERE user_id = %s", (user_id,))
+            wallet = cursor.fetchone()  # tuple
+            if wallet is None:
+                logger.error(f"[TOOLS] User {user_id} does not have a wallet")
+                return "User does not have a wallet"
+            public_key = wallet[3]
+
+            def get_balance(public_key: str, token_address: str) -> str:
+                res = requests.post(
+                    f"{settings.SERVICE_JUPITER_BASE_URL}/balance",
+                    json={"address": public_key, "tokenAddress": token_address},
+                )
+                res.raise_for_status()
+                return json.dumps(res.json())  # Convert dict to string
+
+            balance = retry_request(get_balance, retries=3, delay=5)(
+                public_key, token_address
+            )
+            return balance
 
     def swap_token(
         self, agent: Agent, input_amount: float, input_mint: str, output_mint: str
@@ -46,19 +79,21 @@ class JupiterTool(Toolkit):
                 logger.error(f"[TOOLS] User {user_id} does not have a wallet")
                 return "User does not have a wallet"
             private_key = wallet[4]
-            retry = 0
-            max_retry = 3
-            while retry < max_retry:
-                logger.info(
-                    f"[{retry+1}/{max_retry}]: Swapping {input_amount} {input_mint} to {output_mint} for user: {user_id}"
-                )
+
+            balance = self.check_balance(agent, input_mint)
+            if float(balance) < decimal_input_amount:
+                logger.error(f"[TOOLS] Insufficient balance for user: {user_id}")
+                return "Insufficient balance"
+
+            def _swap(
+                private_key: str, input_amount: float, input_mint: str, output_mint: str
+            ) -> str:
                 body = {
-                    "inputAmount": decimal_input_amount,
+                    "inputAmount": input_amount,
                     "inputMint": input_mint,
                     "outputMint": output_mint,
                     "privateKey": private_key,
                 }
-                logger.info(f"Body: {body}")
                 response = requests.post(
                     f"{settings.SERVICE_JUPITER_BASE_URL}/jupiterSwap",
                     json=body,
@@ -79,15 +114,13 @@ class JupiterTool(Toolkit):
                     )
                     return res["data"]
                 else:
-                    retry += 1
-                    logger.error(f"[FAILED] {response.text}")
-                    time.sleep(10)
+                    raise Exception(
+                        f"[TOOLS] Failed to swap {input_amount} {input_mint} to {output_mint} for user: {user_id}"
+                    )
 
-        # RETURN ERROR
-        logger.error(
-            f"[TOOLS] Failed to swap {input_amount} {input_mint} to {output_mint} for user: {user_id}"
-        )
-        return res["data"]
+            return retry_request(_swap, retries=3, delay=5)(
+                private_key, decimal_input_amount, input_mint, output_mint
+            )
 
     def limit_order(
         self,
@@ -120,21 +153,28 @@ class JupiterTool(Toolkit):
             )
             wallet = cursor.fetchone()  # tuple
             private_key = wallet[4]
-            retry = 0
-            max_retry = 3
-            while retry < max_retry:
-                logger.info(
-                    f"[{retry+1}/{max_retry}]: Creating limit order for user: {user_id}"
-                )
+            balance = self.check_balance(agent, maker_mint)
+            if float(balance) < decimal_maker_amount:
+                logger.error(f"[TOOLS] Insufficient balance for user: {user_id}")
+                return "Insufficient balance"
+
+            def _limit_order(
+                private_key: str,
+                maker_amount: float,
+                taker_amount: float,
+                maker_mint: str,
+                taker_mint: str,
+            ) -> str:
+                body = {
+                    "makingAmount": maker_amount,
+                    "takingAmount": taker_amount,
+                    "inputMint": maker_mint,
+                    "outputMint": taker_mint,
+                    "privateKey": private_key,
+                }
                 response = requests.post(
                     f"{settings.SERVICE_JUPITER_BASE_URL}/jupiterLimitOrder",
-                    json={
-                        "makingAmount": decimal_maker_amount,
-                        "takingAmount": decimal_taker_amount,
-                        "inputMint": maker_mint,
-                        "outputMint": taker_mint,
-                        "privateKey": private_key,
-                    },
+                    json=body,
                 )
                 logger.info(f"Response: {response}")
                 try:
@@ -150,12 +190,17 @@ class JupiterTool(Toolkit):
                     logger.info(f"[TOOLS] Created limit order for user: {user_id}")
                     return res["data"]
                 else:
-                    retry += 1
-                    logger.error(f"[FAILED] {response.text}")
-                    time.sleep(5)
-            ## RETURN ERROR
-            logger.error(f"[TOOLS] Failed to create limit order for user: {user_id}")
-            return res["data"]
+                    raise Exception(
+                        f"[TOOLS] Failed to create limit order for user: {user_id}"
+                    )
+
+            return retry_request(_limit_order, retries=3, delay=5)(
+                private_key,
+                decimal_maker_amount,
+                decimal_taker_amount,
+                maker_mint,
+                taker_mint,
+            )
 
     def cancel_all_orders(self, agent: Agent) -> str:
         """
@@ -175,12 +220,8 @@ class JupiterTool(Toolkit):
             )
             wallet = cursor.fetchone()  # tuple
             private_key = wallet[4]
-            retry = 0
-            max_retry = 3
-            while retry < max_retry:
-                logger.info(
-                    f"[{retry+1}/{max_retry}]: Creating limit order for user: {user_id}"
-                )
+
+            def _cancel_all_orders(private_key: str) -> str:
                 response = requests.post(
                     f"{settings.SERVICE_JUPITER_BASE_URL}/cancelOrders",
                     json={
@@ -201,9 +242,8 @@ class JupiterTool(Toolkit):
                     logger.info(f"[TOOLS] Cancelled all orders for user: {user_id}")
                     return res["data"]
                 else:
-                    retry += 1
-                    logger.error(f"[FAILED] {response.text}")
-                    time.sleep(5)
-            ## RETURN ERROR
-            logger.error(f"[TOOLS] Failed to cancel all orders for user: {user_id}")
-            return res["data"]
+                    raise Exception(
+                        f"[TOOLS] Failed to cancel all orders for user: {user_id}"
+                    )
+
+            return retry_request(_cancel_all_orders, retries=3, delay=5)(private_key)

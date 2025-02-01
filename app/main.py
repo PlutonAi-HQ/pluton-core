@@ -56,7 +56,7 @@ app.include_router(file_router, prefix=PREFIX)
 app.include_router(user_router, prefix=PREFIX)
 app.include_router(wallet_router, prefix=PREFIX)
 app.include_router(auth_router, prefix=PREFIX)
-app.include_router(referral_router, prefix=PREFIX)
+# app.include_router(referral_router, prefix=PREFIX)
 
 
 @app.get(f"{PREFIX}/healthz")

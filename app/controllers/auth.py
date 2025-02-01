@@ -86,7 +86,12 @@ class AuthController:
             # Get or create user
             user = user_service.get_user_by_email(body.email)
             if not user:
-                user = user_service.create_user(body)
+
+                user = user_service.create_user(
+                    body,
+                    body.ref_code,
+                )
+
                 wallet = wallet_service.create_wallet(user.id)
             else:
                 wallet = wallet_service.get_wallet_by_user_id(user.id)

@@ -138,15 +138,15 @@ class JupiterTool(Toolkit):
         """
         Use this tool to create a limit order. Always notify the user about the addresses of tokens.
         Args:
-            maker_amount (float): Amount of maker token to swap. > 5
+            maker_amount (float): Amount of maker token to swap. > 0
             taker_amount (float): Amount of taker token to swap. > 0
             maker_mint (str): Mint address of maker token. It must be a valid mint address. Example: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
             taker_mint (str): Mint address of taker token. It must be a valid mint address. Example: "So11111111111111111111111111111111111111112"
         Returns:
             str: Transaction hash or error message.
         """
-        if maker_amount < 5:
-            return "Maker amount must be greater than 5"
+        # if maker_amount < 5:
+        #     return "Maker amount must be greater than 5"
         user_id = agent.context["user_id"]
         logger.info(f"[TOOLS] Creating limit order for user: {user_id}")
         with pool.connection() as connection:

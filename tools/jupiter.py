@@ -41,7 +41,9 @@ class JupiterTool(Toolkit):
                     json={"address": public_key, "tokenAddress": token_address},
                 )
                 res.raise_for_status()
-                return json.dumps(res.json())  # Convert dict to string
+                return str(
+                    res.json().get("balance", {}).get("balance", 0)
+                )  # Return balance as string
 
             balance = retry_request(get_balance, retries=3, delay=5)(
                 public_key, token_address
@@ -49,24 +51,26 @@ class JupiterTool(Toolkit):
             return balance
 
     def swap_token(
-        self, agent: Agent, input_amount: float, input_mint: str, output_mint: str
+        self,
+        agent: Agent,
+        input_amount: float,
+        input_mint_address: str,
+        output_mint_address: str,
     ) -> str:
         """
-        Use this tool to swap tokens.
+        Use this tool to swap tokens. Always notify the user about the addresses of tokens.
         Args:
             input_amount (float): Amount of input token to swap. > 0
-            input_mint (str): Mint address of input token.
-            output_mint (str): Mint address of output token.
-            user_id (str): User ID to identify the user.'
+            input_mint_address (str): Mint address of input token. It must be a valid mint address. Example: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+            output_mint_address (str): Mint address of output token. It must be a valid mint address. Example: "So11111111111111111111111111111111111111112"
         Returns:
             str: Transaction hash or error message.
         """
         user_id = agent.context["user_id"]
 
         logger.info(
-            f"[TOOLS] Swapping {input_amount} {input_mint} to {output_mint} for user: {agent.context['user_id']}"
+            f"[TOOLS] Swapping {input_amount} {input_mint_address} to {output_mint_address} for user: {agent.context['user_id']}"
         )
-        decimal_input_amount = input_amount * 10**9
         ## CALL JUPITER API
         with pool.connection() as connection:
             cursor = connection.cursor()
@@ -80,18 +84,21 @@ class JupiterTool(Toolkit):
                 return "User does not have a wallet"
             private_key = wallet[4]
 
-            balance = self.check_balance(agent, input_mint)
-            if float(balance) < decimal_input_amount:
+            balance = float(self.check_balance(agent, input_mint_address))
+            if balance < input_amount:
                 logger.error(f"[TOOLS] Insufficient balance for user: {user_id}")
                 return "Insufficient balance"
 
             def _swap(
-                private_key: str, input_amount: float, input_mint: str, output_mint: str
+                private_key: str,
+                input_amount: float,
+                input_mint_address: str,
+                output_mint_address: str,
             ) -> str:
                 body = {
                     "inputAmount": input_amount,
-                    "inputMint": input_mint,
-                    "outputMint": output_mint,
+                    "inputMint": input_mint_address,
+                    "outputMint": output_mint_address,
                     "privateKey": private_key,
                 }
                 response = requests.post(
@@ -110,16 +117,16 @@ class JupiterTool(Toolkit):
                     return response.text
                 if res["status"] is True:
                     logger.info(
-                        f"[TOOLS] Swapped {input_amount} {input_mint} to {output_mint} for user: {user_id}"
+                        f"[TOOLS] Swapped {input_amount} {input_mint_address} to {output_mint_address} for user: {user_id}"
                     )
                     return res["data"]
                 else:
                     raise Exception(
-                        f"[TOOLS] Failed to swap {input_amount} {input_mint} to {output_mint} for user: {user_id}"
+                        f"[TOOLS] Failed to swap {input_amount} {input_mint_address} to {output_mint_address} for user: {user_id}"
                     )
 
             return retry_request(_swap, retries=3, delay=5)(
-                private_key, decimal_input_amount, input_mint, output_mint
+                private_key, input_amount, input_mint_address, output_mint_address
             )
 
     def limit_order(
@@ -143,8 +150,6 @@ class JupiterTool(Toolkit):
         """
         user_id = agent.context["user_id"]
         logger.info(f"[TOOLS] Creating limit order for user: {user_id}")
-        decimal_maker_amount = maker_amount * 10**6
-        decimal_taker_amount = taker_amount * 10**9
         with pool.connection() as connection:
             cursor = connection.cursor()
             cursor.execute(
@@ -153,8 +158,8 @@ class JupiterTool(Toolkit):
             )
             wallet = cursor.fetchone()  # tuple
             private_key = wallet[4]
-            balance = self.check_balance(agent, maker_mint)
-            if float(balance) < decimal_maker_amount:
+            balance = float(self.check_balance(agent, maker_mint))
+            if balance < maker_amount:
                 logger.error(f"[TOOLS] Insufficient balance for user: {user_id}")
                 return "Insufficient balance"
 
@@ -196,8 +201,8 @@ class JupiterTool(Toolkit):
 
             return retry_request(_limit_order, retries=3, delay=5)(
                 private_key,
-                decimal_maker_amount,
-                decimal_taker_amount,
+                maker_amount,
+                taker_amount,
                 maker_mint,
                 taker_mint,
             )

@@ -19,9 +19,9 @@ class JupiterTool(Toolkit):
 
     def check_balance(self, agent: Agent, token_address: str) -> str:
         """
-        Use this tool to check the balance of a user.
+        Use this tool to check the balance of a user in a token.
         Args:
-            token_address (str): Mint address of the token.
+            token_address (str): Mint address of the token. Default is SOL. with address "So11111111111111111111111111111111111111112"
         Returns:
             str: Balance of the user in the token.
         """
@@ -41,9 +41,7 @@ class JupiterTool(Toolkit):
                     json={"address": public_key, "tokenAddress": token_address},
                 )
                 res.raise_for_status()
-                return str(
-                    res.json().get("balance", {}).get("balance", 0)
-                )  # Return balance as string
+                return str(res.json().get("balance", None))  # Return balance as string
 
             balance = retry_request(get_balance, retries=3, delay=5)(
                 public_key, token_address

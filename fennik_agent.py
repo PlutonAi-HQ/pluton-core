@@ -24,6 +24,9 @@ console = Console()
 from phi.model.openai import OpenAIChat
 from phi.model.aws.claude import Claude
 from uuid import uuid4
+from app.services.wallet import WalletService
+from app.database.client import get_db
+from sqlalchemy.orm import Session
 
 db_url = settings.POSTGRES_URL
 storage = PgAgentStorage(
@@ -102,7 +105,11 @@ def call_agent(
     images: list[str] = [],
     user_id: str = None,
     stream: bool = False,
+    db: Session = None,
 ):
+    if db is None:
+        db = next(get_db())
+
     tools = [
         search,
         analyze_image,
@@ -149,6 +156,7 @@ def call_agent(
         debug_mode=True,
         add_datetime_to_instructions=True,
         read_tool_call_history=True,
+        additional_context=f"You own the wallet with address: {WalletService(db).get_wallet_by_user_id(user_id) if user_id else None}",
         context={
             "user_id": user_id,
             "session_id": session_id,

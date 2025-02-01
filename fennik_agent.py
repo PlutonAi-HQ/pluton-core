@@ -156,7 +156,7 @@ def call_agent(
         debug_mode=True,
         add_datetime_to_instructions=True,
         read_tool_call_history=True,
-        additional_context=f"You own the wallet with address: {WalletService(db).get_wallet_by_user_id(user_id) if user_id else None}",
+        additional_context=f"You own the wallet with address: {WalletService(db).get_wallet_by_user_id(user_id).public_key if user_id else None}",
         context={
             "user_id": user_id,
             "session_id": session_id,

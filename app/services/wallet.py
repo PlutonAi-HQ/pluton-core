@@ -34,6 +34,6 @@ class WalletService:
         # self.db.commit()
         return wallet_model
 
-    def get_wallet_by_user_id(self, user_id: str) -> str:
+    def get_wallet_by_user_id(self, user_id: str) -> Wallet:
         wallet = self.db.query(Wallet).filter(Wallet.user_id == user_id).first()
-        return wallet.public_key if wallet else None
+        return wallet if wallet else None

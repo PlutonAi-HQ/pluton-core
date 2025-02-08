@@ -3,3 +3,4 @@ __pycache__/
 
 *.secret.yaml
 env
+test.ipynb

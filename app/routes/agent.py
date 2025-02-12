@@ -13,9 +13,7 @@ from uuid import uuid4
 from config import settings
 from app.middleware.auth import verify_token
 from app.models import User
-from fastapi import Depends
-from sqlalchemy.orm import Session
-from app.database import get_db
+from fastapi import Depends, Query
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +24,13 @@ router = APIRouter(tags=["agent"])
 def agent_history(
     request: Request,
     body: AgentHistoryRequest,
+    limit: int = Query(default=10),
+    offset: int = Query(default=0),
     user: User = Depends(verify_token),
 ):
     try:
-        agent_controller = AgentController()
-        return agent_controller.get_agent_history(body.session_id, str(user.id))
+        agent_controller = AgentController(str(user.id), body.session_id)
+        return agent_controller.get_agent_history(limit, offset)
     except HTTPException as e:
         raise e
     except Exception as e:
@@ -51,11 +51,9 @@ def agent_call(
     try:
 
         def event_generator():
-            agent_controller = AgentController()
+            agent_controller = AgentController(str(user.id), body.session_id)
             aggregated_response = ""
-            response = agent_controller.call_agent(
-                body.message, body.session_id, body.images, str(user.id)
-            )
+            response = agent_controller.call_agent(body.message, body.images)
             for chunk in response:
                 aggregated_response += chunk.content
                 yield f"event: token\ndata: {chunk.content}\n\n"

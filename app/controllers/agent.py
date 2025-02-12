@@ -1,14 +1,12 @@
-from agent_call import call_agent, get_history
+from app.services.agent import AgentService
 
 
 class AgentController:
-    def __init__(self):
-        pass
+    def __init__(self, user_id: str, session_id: str):
+        self.agent_service = AgentService(user_id, session_id)
 
-    def call_agent(
-        self, message: str, session_id: str, images: list[str] = [], user_id: str = None
-    ):
-        return call_agent(message, session_id, images, user_id, stream=True)
+    def call_agent(self, message: str, images: list[str] = []):
+        return self.agent_service.run(message, images)
 
-    def get_agent_history(self, user_id: str, session_id: str = None):
-        return get_history(user_id, session_id)
+    def get_agent_history(self, limit: int = 10, offset: int = 0):
+        return self.agent_service.get_history(limit, offset)

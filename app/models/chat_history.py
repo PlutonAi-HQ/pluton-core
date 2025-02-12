@@ -30,8 +30,5 @@ class AgentSession(Base):
         BigInteger, server_onupdate=text("(extract(epoch from now()))::bigint")
     )
 
-    # Relationships
-    chat_histories = relationship("ChatHistory", cascade="all, delete-orphan")
-
     class Config:
         orm_mode = True

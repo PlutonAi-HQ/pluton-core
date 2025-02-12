@@ -2,6 +2,8 @@ from agents.pluton import PlutonAgent
 from log import logger
 from app.core.response import ResponseHandler, StatusCode, ResponseCode
 from app.dto import ChatHistoryDTO, Message
+from app.models.chat_history import AgentSession
+from app.database.client import get_db
 
 
 class AgentService:
@@ -9,6 +11,9 @@ class AgentService:
         self.agent_service = PlutonAgent(user_id=user_id, session_id=session_id)
         self.agent = self.agent_service.get_agent()
         self.storage = self.agent_service.get_storage()
+        self.db = next(get_db())
+        self.user_id = user_id
+        self.session_id = session_id
 
     def run(self, message: str, images: list[str] = []):
         query = message + " " + "\n".join(images)
@@ -32,7 +37,7 @@ class AgentService:
                     code=ResponseCode.CONVERSATION_NOT_FOUND,
                     status_code=StatusCode.NOT_FOUND,
                 )
-            return self._create_chat_history_dto(session, user_id)
+            return self._create_chat_history_dto(session)
 
         logger.info(
             f"[GET_HISTORY] - all sessions with offset: {offset}, limit: {limit}"
@@ -42,30 +47,27 @@ class AgentService:
         return [
             dto
             for session in paginated_sessions
-            if (dto := self._create_chat_history_dto(session, user_id)) is not None
+            if (dto := self._create_chat_history_dto(session)) is not None
         ]
 
-    def _create_chat_history_dto(self, session, user_id: str) -> ChatHistoryDTO:
-        history, created_at = self._extract_history(
-            session.memory.get("runs", []), session.session_id
-        )
-
+    def _create_chat_history_dto(self, session) -> ChatHistoryDTO:
+        history, created_at = self._extract_history(session.memory.get("runs", []))
         if not history:
             return None
 
-        # title = (
-        #     ChatHistoryCollection().get_title(session.session_id, user_id)
-        #     or history[0].content
-        # )
-
+        title = (
+            session.user_data.get("title", history[0].content)
+            if session.user_data
+            else history[0].content
+        )
         return ChatHistoryDTO(
-            title=history[0].content,
+            title=title,
             data=history,
             created_at=created_at,
             session_id=session.session_id,
         )
 
-    def _extract_history(self, runs: list[dict], session_id: str):
+    def _extract_history(self, runs: list[dict]):
         history: list[Message] = []
         for run in runs:
             user_message = run.get("message").get("content")
@@ -81,5 +83,39 @@ class AgentService:
             history.extend(result)
         return history, created_at
 
-    def _get_session(self, sessions: list, session_id: str):
+    def _get_session(self, sessions: list, session_id: str) -> AgentSession:
         return next((s for s in sessions if s.session_id == session_id), None)
+
+    def edit_title(self, title: str):
+        user_id = self.agent_service.user_id
+        session_id = self.agent_service.session_id
+        logger.info(f"[EDIT_TITLE] - user_id: {user_id}, session_id: {session_id}")
+        try:
+            sessions = self.storage.get_all_sessions(user_id=user_id)
+            session = self._get_session(sessions, session_id)
+            logger.info(f"[EDIT_TITLE] - session: {session}")
+            if not session:
+                return ResponseHandler.error(
+                    code=ResponseCode.CONVERSATION_NOT_FOUND,
+                    status_code=StatusCode.NOT_FOUND,
+                )
+            if session.user_data is None:
+                session.user_data = {}
+            session.user_data["title"] = title
+            self.storage.upsert(session)
+            return ResponseHandler.success(
+                status_code=StatusCode.OK,
+            )
+        except Exception as e:
+            logger.error(f"Error editing title: {e}")
+            return ResponseHandler.error(
+                code=ResponseCode.INTERNAL_ERROR,
+                status_code=StatusCode.INTERNAL_SERVER_ERROR,
+            )
+
+    def delete_session(self):
+        self.storage.delete_session(self.session_id)
+        return ResponseHandler.success(
+            code=ResponseCode.SUCCESS,
+            status_code=StatusCode.OK,
+        )

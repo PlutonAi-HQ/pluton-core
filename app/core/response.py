@@ -8,8 +8,13 @@ class ResponseHandler:
     def success(
         message: Optional[str] = None,
         data: Optional[dict] = None,
-        status_code: StatusCode = StatusCode.SUCCESS,
+        status_code: StatusCode = StatusCode.OK,
     ) -> JSONResponse:
+        if data is None:
+            return JSONResponse(
+                content={"message": message or "Success"},
+                status_code=int(status_code.value),
+            )
         return JSONResponse(
             content={"message": message or "Success", "data": data},
             status_code=int(status_code.value),
@@ -20,7 +25,7 @@ class ResponseHandler:
         message: Optional[str] = None,
         data: Optional[dict] = None,
         code: ResponseCode = ResponseCode.BAD_REQUEST,
-        status_code: StatusCode = StatusCode.ERROR,
+        status_code: StatusCode = StatusCode.BAD_REQUEST,
     ) -> JSONResponse:
         return JSONResponse(
             content={"message": message or code.name, "code": code.value},

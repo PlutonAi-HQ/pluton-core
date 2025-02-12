@@ -10,3 +10,9 @@ class AgentController:
 
     def get_agent_history(self, limit: int = 10, offset: int = 0):
         return self.agent_service.get_history(limit, offset)
+
+    def edit_title(self, title: str):
+        return self.agent_service.edit_title(title)
+
+    def delete_session(self):
+        return self.agent_service.delete_session()

@@ -128,7 +128,3 @@ class UpdateTitleRequest(BaseModel):
         description="The title to be updated",
         examples=["My first session"],
     )
-    session_id: str = Field(
-        description="The session id",
-        examples=[str(uuid.uuid4())],
-    )

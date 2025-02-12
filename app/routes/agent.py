@@ -14,22 +14,22 @@ from config import settings
 from app.middleware.auth import verify_token
 from app.models import User
 from fastapi import Depends, Query
+from app.dto import UpdateTitleRequest
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["agent"])
 
 
-@router.post("/agent/history")
+@router.get("/agent/history")
 def agent_history(
-    request: Request,
-    body: AgentHistoryRequest,
+    session_id: str = Query(default=""),
     limit: int = Query(default=10),
     offset: int = Query(default=0),
     user: User = Depends(verify_token),
 ):
     try:
-        agent_controller = AgentController(str(user.id), body.session_id)
+        agent_controller = AgentController(str(user.id), session_id)
         return agent_controller.get_agent_history(limit, offset)
     except HTTPException as e:
         raise e
@@ -60,6 +60,35 @@ def agent_call(
             yield f"event: end\ndata: {aggregated_response}\n\n"
 
         return StreamingResponse(event_generator(), media_type="text/event-stream")
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/agent/history/{session_id}/title")
+def agent_title(
+    session_id: str,
+    body: UpdateTitleRequest,
+    user: User = Depends(verify_token),
+):
+    try:
+        agent_controller = AgentController(str(user.id), session_id)
+        return agent_controller.edit_title(body.title)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/agent/history/{session_id}")
+def agent_delete(
+    session_id: str,
+    user: User = Depends(verify_token),
+):
+    try:
+        agent_controller = AgentController(str(user.id), session_id)
+        return agent_controller.delete_session()
     except HTTPException as e:
         raise e
     except Exception as e:

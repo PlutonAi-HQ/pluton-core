@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from app.models.user import User
 from app.models.referral import Referral
 from app.dto import UserRequestDTO
-from app.core.exceptions import AppException, ErrorCode
+from app.core.exceptions import AppException, ResponseCode
 from sqlalchemy.exc import IntegrityError
 from app.utils.functions import generate_uuid
 
@@ -48,7 +48,7 @@ class UserService:
         except Exception as e:
             self.db.rollback()
             raise AppException(
-                error_code=ErrorCode.INTERNAL_ERROR,
+                error_code=ResponseCode.INTERNAL_ERROR,
                 message=str(e),
                 status_code=500,
                 extra={"original_error": str(e)},

@@ -1,7 +1,7 @@
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
-from .exceptions import AppException, ErrorCode
+from .exceptions import AppException, ResponseCode
 
 
 async def app_exception_handler(request: Request, exc: AppException):
@@ -21,7 +21,7 @@ async def integrity_error_handler(request: Request, exc: IntegrityError):
         return JSONResponse(
             status_code=409,
             content={
-                "error_code": ErrorCode.DUPLICATE_EMAIL,
+                "error_code": ResponseCode.DUPLICATE_EMAIL,
                 "message": "Email address already exists",
                 "extra": {"field": "email"},
             },
@@ -30,7 +30,7 @@ async def integrity_error_handler(request: Request, exc: IntegrityError):
         return JSONResponse(
             status_code=409,
             content={
-                "error_code": ErrorCode.DUPLICATE_USERNAME,
+                "error_code": ResponseCode.DUPLICATE_USERNAME,
                 "message": "Username already exists",
                 "extra": {"field": "username"},
             },
@@ -38,7 +38,7 @@ async def integrity_error_handler(request: Request, exc: IntegrityError):
     return JSONResponse(
         status_code=409,
         content={
-            "error_code": ErrorCode.DATABASE_ERROR,
+            "error_code": ResponseCode.DATABASE_ERROR,
             "message": "Database constraint violation",
             "extra": {"original_error": str(exc.orig)},
         },

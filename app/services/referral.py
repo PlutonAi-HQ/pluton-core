@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.models.referral import Referral
 from app.models.user import User
-from app.core.exceptions import AppException, ErrorCode
+from app.core.exceptions import AppException, ResponseCode
 from typing import Optional
 from app.utils.functions import generate_referral_code
 from log import logger
@@ -25,8 +25,8 @@ class ReferralService:
             # logger.info(f"Referral: {referral}")
             # if referral:
             #     raise AppException(
-            #         error_code=ErrorCode.REFERRAL_ALREADY_EXISTS.value,
-            #         message=ErrorCode.REFERRAL_ALREADY_EXISTS.name,
+            #         error_code=ResponseCode.REFERRAL_ALREADY_EXISTS.value,
+            #         message=ResponseCode.REFERRAL_ALREADY_EXISTS.name,
             #         status_code=400,
             #     )
             # Tìm user theo user_id
@@ -34,8 +34,8 @@ class ReferralService:
             # user = self.db.query(User).filter_by(id=user_id).first()
             # if not user:
             #     raise AppException(
-            #         error_code=ErrorCode.USER_NOT_FOUND.value,
-            #         message=ErrorCode.USER_NOT_FOUND.name,
+            #         error_code=ResponseCode.USER_NOT_FOUND.value,
+            #         message=ResponseCode.USER_NOT_FOUND.name,
             #         status_code=404,
             #     )
 
@@ -54,8 +54,8 @@ class ReferralService:
             print(e)
             if "duplicate key value" in str(e):
                 raise AppException(
-                    error_code=ErrorCode.DUPLICATE_ENTRY.value,
-                    message=ErrorCode.DUPLICATE_ENTRY.name,
+                    error_code=ResponseCode.DUPLICATE_ENTRY.value,
+                    message=ResponseCode.DUPLICATE_ENTRY.name,
                     status_code=409,
                 )
             raise AppException.from_exception(e)
@@ -63,8 +63,8 @@ class ReferralService:
         except Exception as e:
             self.db.rollback()
             raise AppException(
-                error_code=ErrorCode.INTERNAL_ERROR.value,
-                message=ErrorCode.INTERNAL_ERROR.name,
+                error_code=ResponseCode.INTERNAL_ERROR.value,
+                message=ResponseCode.INTERNAL_ERROR.name,
                 status_code=500,
                 extra={"original_error": str(e)},
             )
@@ -82,8 +82,8 @@ class ReferralService:
             user: User = self.db.query(User).get(user_id)
             if not user:
                 raise AppException(
-                    error_code=ErrorCode.NOT_FOUND.value,
-                    message=ErrorCode.NOT_FOUND.name,
+                    error_code=ResponseCode.NOT_FOUND.value,
+                    message=ResponseCode.NOT_FOUND.name,
                     status_code=404,
                 )
             # Tìm referral code
@@ -92,22 +92,22 @@ class ReferralService:
             )
             if not referral:
                 raise AppException(
-                    error_code=ErrorCode.REFERRAL_NOT_FOUND.value,
-                    message=ErrorCode.REFERRAL_NOT_FOUND.name,
+                    error_code=ResponseCode.REFERRAL_NOT_FOUND.value,
+                    message=ResponseCode.REFERRAL_NOT_FOUND.name,
                     status_code=404,
                 )
             # Check if user_id is owner of referral
             if user_id == referral.owner_id:
                 raise AppException(
-                    error_code=ErrorCode.REFERRAL_NOT_OWNER.value,
-                    message=ErrorCode.REFERRAL_NOT_OWNER.name,
+                    error_code=ResponseCode.REFERRAL_NOT_OWNER.value,
+                    message=ResponseCode.REFERRAL_NOT_OWNER.name,
                     status_code=400,
                 )
             # Kiểm tra user đã trong danh sách chưa
             if user_id in (referral.referred_user_ids or []):
                 raise AppException(
-                    error_code=ErrorCode.REFERRAL_ALREADY_USED.value,
-                    message=ErrorCode.REFERRAL_ALREADY_USED.name,
+                    error_code=ResponseCode.REFERRAL_ALREADY_USED.value,
+                    message=ResponseCode.REFERRAL_ALREADY_USED.name,
                     status_code=400,
                 )
 
@@ -123,8 +123,8 @@ class ReferralService:
         except Exception as e:
             self.db.rollback()
             raise AppException(
-                error_code=ErrorCode.INTERNAL_ERROR.value,
-                message=ErrorCode.INTERNAL_ERROR.name,
+                error_code=ResponseCode.INTERNAL_ERROR.value,
+                message=ResponseCode.INTERNAL_ERROR.name,
                 status_code=500,
                 extra={"original_error": str(e)},
             )

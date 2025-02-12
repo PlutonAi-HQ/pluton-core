@@ -1,6 +1,8 @@
 from typing import Optional
 from pydantic import BaseModel, Field
 from datetime import datetime
+import uuid
+from typing import Literal
 
 
 class LoginRequest(BaseModel):
@@ -101,3 +103,32 @@ class SocialCallbackRequest(BaseModel):
 
 class UseRefCodeRequest(BaseModel):
     ref_code: str
+
+
+####################
+# Chat History DTO #
+####################
+
+
+class Message(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+    images: list[str] | None = None
+
+
+class ChatHistoryDTO(BaseModel):
+    title: str
+    data: list[Message]
+    created_at: datetime
+    session_id: str
+
+
+class UpdateTitleRequest(BaseModel):
+    title: str = Field(
+        description="The title to be updated",
+        examples=["My first session"],
+    )
+    session_id: str = Field(
+        description="The session id",
+        examples=[str(uuid.uuid4())],
+    )

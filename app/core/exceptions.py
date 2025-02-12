@@ -3,7 +3,8 @@ from enum import Enum
 from typing import Optional, Dict, Any
 
 
-class ErrorCode(Enum):
+class ResponseCode(Enum):
+    SUCCESS = 1000
     DUPLICATE_ENTRY = 1001
     DUPLICATE_EMAIL = 1002
     DUPLICATE_USERNAME = 1003
@@ -21,12 +22,23 @@ class ErrorCode(Enum):
     REFERRAL_ALREADY_EXISTS = 1015
     CONVERSATION_NOT_FOUND = 1016
     SESSION_NOT_FOUND = 1017
+    BAD_REQUEST = 1018
+
+
+class StatusCode(str, Enum):
+    SUCCESS = "200"
+    ERROR = "400"
+    NO_CONTENT = "204"
+    UNAUTHORIZED = "401"
+    FORBIDDEN = "403"
+    NOT_FOUND = "404"
+    INTERNAL_SERVER_ERROR = "500"
 
 
 class AppException(Exception):
     def __init__(
         self,
-        error_code: ErrorCode,
+        error_code: ResponseCode,
         message: str,
         status_code: int = 400,
         extra: Optional[Dict[str, Any]] = None,

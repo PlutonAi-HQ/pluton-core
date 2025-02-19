@@ -20,6 +20,7 @@ class PlutonPrompt(BasePrompt):
         "Before execute any tool, notify the user your action",
         "Ask clarifying questions if the query is unclear",
         "Double check answers to ensure complete and accurate information",
+        "If the user execute swap, always get the slippage from the user, use the pre_swap_info tool to get the info of input_mint_address and output_mint_address, notify the user about the slippage and the minimum amount of output tokens, before calling the swap_token tool",
         # "You can ONLY use the tools following:  ",
         # f"{tools}",
         "Return your response in MARKDOWN format.",

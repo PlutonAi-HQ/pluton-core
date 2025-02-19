@@ -29,7 +29,7 @@ from app.database.client import get_db
 from sqlalchemy.orm import Session
 from prompt_engineering.pluton import PlutonPrompt
 from pydantic import BaseModel
-from typing import List, Any, ClassVar
+from typing import List, Any, Optional
 from prompt_engineering.base import BasePrompt
 from pydantic import ConfigDict
 
@@ -38,17 +38,9 @@ class PlutonAgent(BaseModel):
     user_id: str | None = None
     session_id: str | None = None
     agent: Agent | None = None
-    tools: ClassVar[List[Any]] = [
-        search,
-        analyze_image,
-        get_tokens_information,
-        JupiterTool(),
-    ]
-    prompt: BasePrompt | None = PlutonPrompt()
-    storage: ClassVar[PgAgentStorage] = PgAgentStorage(
-        table_name="agent_sessions",
-        db_url=settings.POSTGRES_URL,
-    )
+    tools: Optional[List[Any]] = None
+    prompt: Optional[BasePrompt] = PlutonPrompt()
+    storage: Optional[PgAgentStorage] = None
     db: Session = next(get_db())
     wallet_address: str | None = None
 
@@ -56,17 +48,27 @@ class PlutonAgent(BaseModel):
         arbitrary_types_allowed=True, populate_by_name=True, extra="allow"
     )
 
-    @property
-    def wallet_address(self):
+    def get_wallet_address(self):
         if self.user_id:
             wallet = WalletService(self.db).get_wallet_by_user_id(self.user_id)
             if wallet:
                 self.wallet_address = wallet.public_key
+        return self.wallet_address
+
+    def get_tools(self):
+        if self.tools is None:
+            self.tools = [
+                search,
+                analyze_image,
+                get_tokens_information,
+                JupiterTool(),
+            ]
+        return self.tools
 
     def get_agent(self):
         return Agent(
-            tools=self.tools,
-            storage=self.storage,
+            tools=self.get_tools(),
+            storage=self.get_storage(),
             description=self.prompt.description,
             instructions=self.prompt.instructions,
             system_prompt=self.prompt.system_prompt,
@@ -79,7 +81,7 @@ class PlutonAgent(BaseModel):
             debug_mode=True,
             add_datetime_to_instructions=True,
             read_tool_call_history=True,
-            additional_context=f"You own the wallet with address: {self.wallet_address}",
+            additional_context=f"You own the wallet with address: {self.get_wallet_address()}",
             context={
                 "user_id": self.user_id,
                 "session_id": self.session_id,
@@ -87,6 +89,11 @@ class PlutonAgent(BaseModel):
         )
 
     def get_storage(self):
+        if self.storage is None:
+            self.storage = PgAgentStorage(
+                table_name="agent_sessions",
+                db_url=settings.POSTGRES_URL,
+            )
         return self.storage
 
     def run(self, message: str, stream: bool = True):
@@ -95,7 +102,9 @@ class PlutonAgent(BaseModel):
 
 
 if __name__ == "__main__":
-    user_id = "DEV"
+    user_id = "50c96bb8-359e-4adf-bec7-4532895b2bbb"
     session_id = str(uuid4())
-    pluton = PlutonAgent()
-    logger.info(pluton.run("What is the price of Bitcoin?", stream=False))
+    pluton = PlutonAgent(user_id=user_id, session_id=session_id)
+    while True:
+        message = input("Enter a message: ")
+        logger.info(pluton.run(message, stream=False).content)

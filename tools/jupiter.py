@@ -27,6 +27,7 @@ class JupiterTool(Toolkit):
         self.register(self.get_pool_info)
         self.register(self.pre_swap_info)
         self.register(self.create_dca)
+        self.register(self.cancel_dca)
 
     def _get_wallet(self, agent: Agent) -> Wallet | None:
         user_id = agent.context["user_id"]

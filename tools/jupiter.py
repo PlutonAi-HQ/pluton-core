@@ -26,6 +26,7 @@ class JupiterTool(Toolkit):
         self.register(self.get_token_address)
         self.register(self.get_pool_info)
         self.register(self.pre_swap_info)
+        self.register(self.create_dca)
 
     def _get_wallet(self, agent: Agent) -> Wallet | None:
         user_id = agent.context["user_id"]
@@ -59,9 +60,9 @@ class JupiterTool(Toolkit):
         public_key = wallet.public_key
 
         def get_balance(public_key: str, token_address: str) -> str:
-            res = requests.post(
+            res = requests.get(
                 f"{settings.SERVICE_JUPITER_BASE_URL}/balance",
-                json={"address": public_key, "tokenAddress": token_address},
+                params={"address": public_key, "tokenAddress": token_address},
             )
             res.raise_for_status()
             return str(res.json().get("balance", None))  # Return balance as string
@@ -271,19 +272,21 @@ class JupiterTool(Toolkit):
                 logger.info(
                     f"[TOOLS] Swapped {input_amount} {input_mint_address} to {output_mint_address} for user: {user_id}"
                 )
-                return res["data"]
+                return str(res["data"])
             else:
-                raise Exception(
-                    f"[TOOLS] Failed to swap {input_amount} {input_mint_address} to {output_mint_address} for user: {user_id}"
-                )
+                raise Exception(f"Something went wrong: {res}")
 
-        return retry_request(_swap, retries=3, delay=5)(
-            private_key,
-            input_amount,
-            input_mint_address,
-            output_mint_address,
-            slippage,
-        )
+        try:
+            return retry_request(_swap, retries=3, delay=5)(
+                private_key,
+                input_amount,
+                input_mint_address,
+                output_mint_address,
+                slippage,
+            )
+        except Exception as e:
+            logger.error(f"[TOOLS] Something went wrong: {e}")
+            return str(e)
 
     def limit_order(
         self,
@@ -348,19 +351,21 @@ class JupiterTool(Toolkit):
                 return response.text
             if res["status"] is True:
                 logger.info(f"[TOOLS] Created limit order for user: {user_id}")
-                return res["data"]
+                return str(res["data"])
             else:
-                raise Exception(
-                    f"[TOOLS] Failed to create limit order for user: {user_id}"
-                )
+                raise Exception(f"Something went wrong: {res}")
 
-        return retry_request(_limit_order, retries=3, delay=5)(
-            private_key,
-            maker_amount,
-            taker_amount,
-            maker_mint,
-            taker_mint,
-        )
+        try:
+            return retry_request(_limit_order, retries=3, delay=5)(
+                private_key,
+                maker_amount,
+                taker_amount,
+                maker_mint,
+                taker_mint,
+            )
+        except Exception as e:
+            logger.error(f"[TOOLS] Something went wrong: {e}")
+            return str(e)
 
     def cancel_all_orders(self, agent: Agent) -> str:
         """
@@ -397,10 +402,138 @@ class JupiterTool(Toolkit):
                 return response.text
             if res["status"] is True:
                 logger.info(f"[TOOLS] Cancelled all orders for user: {user_id}")
-                return res["data"]
+                return str(res["data"])
             else:
-                raise Exception(
-                    f"[TOOLS] Failed to cancel all orders for user: {user_id}"
-                )
+                raise Exception(f"[TOOLS] Something went wrong: {res}")
 
-        return retry_request(_cancel_all_orders, retries=3, delay=5)(private_key)
+        try:
+            return retry_request(_cancel_all_orders, retries=3, delay=5)(private_key)
+        except Exception as e:
+            logger.error(f"[TOOLS] Something went wrong: {e}")
+            return str(e)
+
+    def create_dca(
+        self,
+        agent: Agent,
+        input_token: str,
+        output_token: str,
+        total_amount: float,
+        interval: float,
+        amount_per_interval: float,
+    ) -> str:
+        """
+        Use this tool to create a DCA for a user.
+        Args:
+            input_token (str): Name of input token. Example: "SOL", "USDC"
+            output_token (str): Name of output token. Example: "USDC", "SOL"
+            total_amount (float): Total amount of input token to swap. > 0
+            interval (float): Interval in hours between each swap. > 0. It could be a float number. If 0.5, it means 30 minutes, 1.5 means 90 minutes, etc.
+            amount_per_interval (float): Amount of input token to swap per interval. > 0
+        Returns:
+            str: Transaction hash or error message.
+        """
+        user_id = agent.context["user_id"]
+        logger.info(f"[TOOLS] Creating DCA for user: {user_id}")
+        wallet = self._get_wallet(agent)
+        if wallet is None:
+            logger.error(f"[TOOLS] User {user_id} does not have a wallet")
+            return "User does not have a wallet"
+        private_key = wallet.private_key
+
+        def _create_dca(
+            private_key: str,
+            input_token: str,
+            output_token: str,
+            total_amount: float,
+            interval: float,
+            amount_per_interval: float,
+        ) -> str:
+            body = {
+                "privateKey": private_key,
+                "inputMint": input_token,
+                "outputMint": output_token,
+                "inputAmount": total_amount,
+                "timeHoursCircle": interval,
+                "amountPerCircle": amount_per_interval,
+            }
+            response = requests.post(
+                f"{settings.SERVICE_JUPITER_BASE_URL}/dca",
+                json=body,
+            )
+            logger.info(f"Response: {response}")
+            try:
+                res = response.json()
+            except requests.exceptions.JSONDecodeError:
+                # Handle empty or invalid JSON response
+                logger.error(
+                    f"Error: Invalid response received. Status code: {response.status_code}"
+                )
+                logger.error(f"Response text: {response.text}")
+                return response.text
+            if res["status"] is True:
+                logger.info(f"[TOOLS] Created DCA for user: {user_id}")
+                return str(res["data"])
+            else:
+                raise Exception(f"Something went wrong: {res}")
+
+        try:
+            return retry_request(_create_dca, retries=3, delay=5)(
+                private_key,
+                input_token,
+                output_token,
+                total_amount,
+                interval,
+                amount_per_interval,
+            )
+        except Exception as e:
+            logger.error(f"[TOOLS] Something went wrong: {e}")
+            return str(e)
+
+    def cancel_dca(self, agent: Agent, dca_public_key: str) -> str:
+        """
+        Use this tool to cancel a DCA for a user.
+        Args:
+            dca_public_key (str): Public key of the DCA.
+        Returns:
+            str: Transaction hash or error message.
+        """
+        user_id = agent.context["user_id"]
+        logger.info(f"[TOOLS] Cancelling DCA for user: {user_id}")
+        wallet = self._get_wallet(agent)
+        if wallet is None:
+            logger.error(f"[TOOLS] User {user_id} does not have a wallet")
+            return "User does not have a wallet"
+        private_key = wallet.private_key
+
+        def _cancel_dca(private_key: str, dca_public_key: str) -> str:
+            body = {
+                "privateKey": private_key,
+                "dcaPublickey": dca_public_key,
+            }
+            response = requests.post(
+                f"{settings.SERVICE_JUPITER_BASE_URL}/dca/close",
+                json=body,
+            )
+            logger.info(f"Response: {response}")
+            try:
+                res = response.json()
+            except requests.exceptions.JSONDecodeError:
+                # Handle empty or invalid JSON response
+                logger.error(
+                    f"Error: Invalid response received. Status code: {response.status_code}"
+                )
+                logger.error(f"Response text: {response.text}")
+                return response.text
+            if res["status"] is True:
+                logger.info(f"[TOOLS] Cancelled DCA for user: {user_id}")
+                return str(res["data"])
+            else:
+                raise Exception(f"Something went wrong: {res}")
+
+        try:
+            return retry_request(_cancel_dca, retries=3, delay=5)(
+                private_key, dca_public_key
+            )
+        except Exception as e:
+            logger.error(f"[TOOLS] Something went wrong: {e}")
+            return str(e)
